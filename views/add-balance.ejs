@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : `Add Balance | ${typeof siteName !== 'undefined' ? siteName : 'Boostium.shop'}` %></title>
+    <meta name="description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta name="keywords" content="<%= typeof siteKeywords !== 'undefined' ? siteKeywords : 'boosts, servers, boosting, platform' %>">
+    <meta property="og:title" content="<%= typeof siteName !== 'undefined' ? siteName : 'Boostium.shop' %>">
+    <meta property="og:description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta property="og:url" content="<%= typeof siteUrl !== 'undefined' ? siteUrl : 'https://boostium.shop' %>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#030014',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                        neon: {
+                            pink: '#F472B6',
+                            blue: '#60A5FA',
+                            purple: '#A78BFA'
+                        }
+                    },
+                    backgroundImage: {
+                        'nebula': 'radial-gradient(circle at 50% -20%, #2e1065, #030014 60%)',
+                        'card-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)'
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030014;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .spotlight-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s;
+        }
+
+        .spotlight-card::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: 3;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .spotlight-card:hover::before {
+            opacity: 1;
+        }
+
+        .spotlight-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(180deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.1) 100%);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #a78bfa;
+        }
+
+        .nav-link.active {
+            color: #a78bfa;
+        }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        .package-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .package-card:hover:not(.disabled) {
+            transform: scale(1.02);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .package-card.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .package-card.selected {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .out-of-stock-banner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        .out-of-stock-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 40px;
+            background: #dc2626;
+            transform: rotate(45deg);
+            transform-origin: top right;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            margin-top: 15px;
+            margin-right: -35px;
+        }
+        
+        .out-of-stock-banner::after {
+            content: 'OUT OF STOCK';
+            position: absolute;
+            top: 22px;
+            right: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            transform: rotate(45deg);
+            transform-origin: center;
+            text-transform: uppercase;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            z-index: 21;
+        }
+
+        .user-profile-card {
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-profile-card:hover {
+            border-color: rgba(167, 139, 250, 0.5) !important;
+        }
+
+        .user-profile-card:hover #user-profile-btn {
+            box-shadow: 
+                0 0 15px rgba(167, 139, 250, 0.6),
+                0 0 30px rgba(167, 139, 250, 0.4),
+                0 0 45px rgba(244, 114, 182, 0.3),
+                0 0 60px rgba(244, 114, 182, 0.2);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(15, 10, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 16px;
+            width: 280px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(167, 139, 250, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .status-badge {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .user-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .user-name {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-id-btn {
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 12px;
+        }
+
+        .copy-id-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .balance-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .balance-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .balance-value {
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .user-dropdown-menu {
+            padding: 8px;
+        }
+
+        .user-dropdown-item {
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        .user-dropdown-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(244, 114, 182, 0.15);
+            color: #f472b6;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .advertisement-banner {
+            max-height: 200px;
+            width: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .advertisement-banner:hover {
+            transform: scale(1.02);
+        }
+
+        .advertisement-link {
+            display: block;
+            text-decoration: none;
+        }
+
+        .advertisement-link:hover {
+            text-decoration: none;
+        }
+
+        .leaderboard-rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .leaderboard-rank-badge.rank-1 {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-2 {
+            background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+            color: #1f2937;
+        }
+
+        .leaderboard-rank-badge.rank-3 {
+            background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-other {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-row {
+            transition: background-color 0.2s;
+        }
+
+        .leaderboard-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank-badge-prestige {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+
+        .rank-badge-gold {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-500 selection:text-white min-h-screen">
+
+    <!-- Background Elements -->
+    <div class="fixed top-0 left-0 w-full h-full bg-nebula -z-20"></div>
+
+     <!-- Navigation -->
+     <div class="fixed w-full z-50 top-4 flex justify-center px-4">
+        <nav class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4 flex items-center justify-between gap-6 shadow-2xl shadow-indigo-500/10 w-full max-w-6xl">
+            <!-- Left: Logo + Links -->
+            <div class="flex items-center gap-10">
+                <a href="/" class="font-bold text-xl tracking-tight flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-indigo-500"></span>
+                    Boostium
+                </a>
+                <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+                   
+                </div>
+            </div>
+
+            <!-- Right: User Profile Summary -->
+            <div class="hidden sm:flex items-center">
+                <div class="user-profile-card relative">
+                    <div id="user-profile-btn" class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-2xl px-3 py-2 shadow-lg shadow-black/40">
+                        <!-- Avatar with initials -->
+                        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold">
+                            <%
+                                let initials = 'US';
+                                if (typeof userStats !== 'undefined' && userStats) {
+                                    if (userStats.name && userStats.name.trim().length > 0) {
+                                        const parts = userStats.name.trim().split(' ');
+                                        initials = (parts[0][0] || '') + (parts[1] ? parts[1][0] : '');
+                                        initials = initials.toUpperCase();
+                                    } else if (userStats.email) {
+                                        initials = userStats.email[0].toUpperCase();
+                                    }
+                                }
+                            %>
+                            <span><%= initials %></span>
+                        </div>
+                        <!-- Name + Balance -->
+                        <div class="flex flex-col leading-tight">
+                            <span class="text-[12px] font-semibold text-gray-100 max-w-[100px] truncate">
+                                <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                            </span>
+                            <a href="/add-balance" class="text-[11px] font-semibold text-purple-300 hover:text-purple-200 transition-colors cursor-pointer">
+                                <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                    $<%= userStats.UserBalance.toFixed(2) %>
+                                <% } else { %>
+                                    $0.00
+                                <% } %>
+                            </a>
+                        </div>
+                        <i class="fas fa-chevron-down text-[9px] text-gray-400 transition-transform duration-200" id="chevron-icon"></i>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown" class="user-dropdown">
+                        <!-- Header Section -->
+                        <div class="user-dropdown-header">
+                            <!-- Status + User Info -->
+                            <div class="user-status-row">
+                                <span class="status-badge">
+                                    <%
+                                        let badgeInitials = 'US';
+                                        if (typeof userStats !== 'undefined' && userStats) {
+                                            if (userStats.name && userStats.name.trim().length > 0) {
+                                                const nameParts = userStats.name.trim().split(' ');
+                                                if (nameParts.length > 1) {
+                                                    badgeInitials = (nameParts[0][0] || '') + (nameParts[1][0] || '');
+                                                } else {
+                                                    badgeInitials = nameParts[0].substring(0, 2);
+                                                    if (badgeInitials.length < 2) {
+                                                        badgeInitials = badgeInitials + badgeInitials;
+                                                    }
+                                                }
+                                                badgeInitials = badgeInitials.toUpperCase();
+                                            } else if (userStats.email) {
+                                                badgeInitials = userStats.email.substring(0, 2).toUpperCase();
+                                            }
+                                        }
+                                    %>
+                                    <%= badgeInitials %>
+                                </span>
+                                <div class="user-info-row">
+                                    <span class="user-name">
+                                        <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- User ID -->
+                            <div class="user-info-row" style="margin-bottom: 12px;">
+                                <span class="user-id" id="user-id-text" data-user-id="<%= (typeof userStats !== 'undefined' && userStats && userStats._id) ? userStats._id.toString() : '' %>">
+                                    <% if (typeof userStats !== 'undefined' && userStats && userStats._id) { %>
+                                        <%= userStats._id.toString().substring(0, 10) %>...
+                                    <% } else { %>
+                                        N/A
+                                    <% } %>
+                                </span>
+                                <i class="fas fa-clipboard copy-id-btn" onclick="copyUserId(event)" title="Copy User ID"></i>
+                            </div>
+                            <!-- Balance -->
+                            <div class="balance-row">
+                                <div class="balance-label">
+                                    <i class="fas fa-wallet"></i>
+                                    <span>Balance:</span>
+                                </div>
+                                <a href="/add-balance" class="balance-value hover:text-purple-300 transition-colors cursor-pointer">
+                                    <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                        $<%= userStats.UserBalance.toFixed(2) %>
+                                    <% } else { %>
+                                        $0.00
+                                    <% } %>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Menu Items -->
+                        <div class="user-dropdown-menu">
+                            <div class="user-dropdown-item" onclick="window.location.href='/account-settings'">
+                                <i class="fas fa-cog"></i>
+                                <span>Account Settings</span>
+                            </div>
+                            <div class="user-dropdown-item" onclick="window.location.href='/order-history'">
+                                <i class="fas fa-history"></i>
+                                <span>Order History</span>
+                            </div>
+                            <div class="user-dropdown-item logout" onclick="handleLogout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto px-6 pt-32 pb-10">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold mb-2">Add Funds</h1>
+            <p class="text-gray-400">Add funds to your account to purchase boosts</p>
+        </div>
+
+        <!-- Add Balance Card -->
+        <div class="spotlight-card rounded-2xl p-6">
+            <div class="flex items-center gap-2 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wallet w-5 h-5 text-purple-400"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path></svg>
+                <h2 class="text-xl font-bold">Add Funds</h2>
+            </div>
+
+            <div class="mb-6">
+                <label for="amount" class="block text-sm font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dollar-sign w-4 h-4 text-purple-400">
+                        <line x1="12" x2="12" y1="2" y2="22"></line>
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                    </svg>
+                    Amount (USD)
+                </label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dollar-sign h-5 w-5 text-zinc-500 group-focus-within:text-purple-400 transition-colors duration-200">
+                            <line x1="12" x2="12" y1="2" y2="22"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                    </div>
+                    <input id="amount" placeholder="Enter amount (min $20)" min="20" step="0.01" class="w-full bg-zinc-800/50 border border-zinc-700/50 focus:border-purple-500/50 rounded-lg pl-12 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200" type="number" data-gtm-form-interact-field-id="0">
+                </div>
+                <div class="mt-4 grid grid-cols-3 sm:grid-cols-6 gap-2">
+                    <button type="button" data-preset-amount="20" class="px-3 py-2 rounded-lg text-sm font-medium border bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-purple-500/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">$20</button>
+                    <button type="button" data-preset-amount="25" class="px-3 py-2 rounded-lg text-sm font-medium border bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-purple-500/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">$25</button>
+                    <button type="button" data-preset-amount="50" class="px-3 py-2 rounded-lg text-sm font-medium border bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-purple-500/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">$50</button>
+                    <button type="button" data-preset-amount="100" class="px-3 py-2 rounded-lg text-sm font-medium border bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-purple-500/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">$100</button>
+                    <button type="button" data-preset-amount="250" class="px-3 py-2 rounded-lg text-sm font-medium border bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-purple-500/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">$250</button>
+                    <button type="button" data-preset-amount="500" class="px-3 py-2 rounded-lg text-sm font-medium border bg-zinc-800/50 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-purple-500/20 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]">$500</button>
+                </div>
+                <p class="mt-2 text-xs text-zinc-500">Minimum tutar: $20</p>
+            </div>
+
+
+            <div class="mb-8">
+                <label class="block text-sm font-medium text-zinc-400 mb-2 flex items-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-coins w-4 h-4 text-purple-400">
+                        <circle cx="8" cy="8" r="6"></circle>
+                        <path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path>
+                        <path d="M7 6h1v4"></path>
+                        <path d="M16 6h1v4"></path>
+                    </svg>
+                    Select Cryptocurrency
+                </label>
+                <div class="border-t border-white/10 mb-3"></div>
+                
+                <!-- Currency Dropdown -->
+                <div class="relative" id="currency-dropdown-container">
+                    <!-- Selected Currency Button -->
+                    <button type="button" id="currency-select-btn" class="w-full flex items-center justify-between gap-3 p-4 rounded-xl border-2 border-zinc-800/50 bg-zinc-800/30 hover:bg-zinc-800/40 transition-all duration-200">
+                        <div class="flex items-center gap-3 flex-1">
+                            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full p-2" id="selected-currency-icon-container">
+                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="w-8 h-8 text-[#F7931A]" id="selected-currency-icon">
+                                    <path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zm-141.651-35.33c4.937-32.999-20.191-50.739-54.55-62.573l11.146-44.702-27.213-6.781-10.851 43.524c-7.154-1.783-14.502-3.464-21.803-5.13l10.929-43.81-27.198-6.781-11.153 44.686c-5.922-1.349-11.735-2.682-17.377-4.084l.031-.14-37.53-9.37-7.239 29.062s20.191 4.627 19.765 4.913c11.022 2.751 13.014 10.044 12.68 15.825l-12.696 50.925c.76.194 1.744.473 2.829.907-.907-.225-1.876-.473-2.876-.713l-17.796 71.338c-1.349 3.348-4.767 8.37-12.471 6.464.271.395-19.78-4.937-19.78-4.937l-13.51 31.147 35.414 8.827c6.588 1.651 13.045 3.379 19.4 5.006l-11.262 45.213 27.182 6.781 11.153-44.733a1038.209 1038.209 0 0 0 21.687 5.627l-11.115 44.523 27.213 6.781 11.262-45.128c46.404 8.781 81.299 5.239 95.986-36.727 11.836-33.79-.589-53.281-25.004-65.991 17.78-4.098 31.174-15.792 34.747-39.949zm-62.177 87.179c-8.41 33.79-65.308 15.523-83.755 10.943l14.944-59.899c18.446 4.603 77.6 13.717 68.811 48.956zm8.417-87.667c-7.673 30.736-55.031 15.12-70.393 11.292l13.548-54.327c15.363 3.828 64.836 10.973 56.845 43.035z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 text-left">
+                                <div class="font-medium text-white" id="selected-currency-name">Bitcoin</div>
+                            </div>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 transition-transform duration-200" id="currency-chevron">
+                            <path d="m6 9 6 6 6-6"></path>
+                        </svg>
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="currency-dropdown-menu" class="hidden absolute top-full left-0 right-0 mt-2 bg-[#1a1a2e] border border-[#2d2d44] rounded-xl shadow-2xl z-50 max-h-64 overflow-y-auto">
+                        <!-- Bitcoin (BTC) -->
+                        <button type="button" data-currency="BTC" class="currency-option w-full flex items-center gap-3 p-4 hover:bg-purple-500/10 transition-colors border-b border-white/5 first:rounded-t-xl">
+                            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full p-2">
+                                <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="w-8 h-8 text-[#F7931A]">
+                                    <path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zm-141.651-35.33c4.937-32.999-20.191-50.739-54.55-62.573l11.146-44.702-27.213-6.781-10.851 43.524c-7.154-1.783-14.502-3.464-21.803-5.13l10.929-43.81-27.198-6.781-11.153 44.686c-5.922-1.349-11.735-2.682-17.377-4.084l.031-.14-37.53-9.37-7.239 29.062s20.191 4.627 19.765 4.913c11.022 2.751 13.014 10.044 12.68 15.825l-12.696 50.925c.76.194 1.744.473 2.829.907-.907-.225-1.876-.473-2.876-.713l-17.796 71.338c-1.349 3.348-4.767 8.37-12.471 6.464.271.395-19.78-4.937-19.78-4.937l-13.51 31.147 35.414 8.827c6.588 1.651 13.045 3.379 19.4 5.006l-11.262 45.213 27.182 6.781 11.153-44.733a1038.209 1038.209 0 0 0 21.687 5.627l-11.115 44.523 27.213 6.781 11.262-45.128c46.404 8.781 81.299 5.239 95.986-36.727 11.836-33.79-.589-53.281-25.004-65.991 17.78-4.098 31.174-15.792 34.747-39.949zm-62.177 87.179c-8.41 33.79-65.308 15.523-83.755 10.943l14.944-59.899c18.446 4.603 77.6 13.717 68.811 48.956zm8.417-87.667c-7.673 30.736-55.031 15.12-70.393 11.292l13.548-54.327c15.363 3.828 64.836 10.973 56.845 43.035z"></path>
+                                </svg>
+                            </div>
+                            <div class="flex-1 text-left">
+                                <div class="font-medium text-white">Bitcoin</div>
+                            </div>
+                            <div class="text-purple-400 hidden currency-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 6 9 17l-5-5"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        
+                        <!-- Tether USDT (TRX) -->
+                        <button type="button" data-currency="USDTTRX" class="currency-option w-full flex items-center gap-3 p-4 hover:bg-red-500/10 transition-colors border-b border-white/5">
+                            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full p-2">
+                                <img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" alt="USDT" class="w-8 h-8 rounded-full">
+                            </div>
+                            <div class="flex-1 text-left">
+                                <div class="font-medium text-white">Tether</div>
+                                <div class="text-xs text-gray-400">USDT (TRON)</div>
+                            </div>
+                            <div class="px-2 py-1 bg-red-500/20 border border-red-500/30 rounded text-xs font-semibold text-red-300">
+                                TRX
+                            </div>
+                            <div class="text-red-400 hidden currency-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 6 9 17l-5-5"></path>
+                                </svg>
+                            </div>
+                        </button>
+                        
+                        <!-- TRX (TRON Native) -->
+                        <button type="button" data-currency="TRX" class="currency-option w-full flex items-center gap-3 p-4 hover:bg-orange-500/10 transition-colors last:rounded-b-xl">
+                            <div class="w-10 h-10 flex items-center justify-center bg-white/10 rounded-full p-2">
+                                <img src="https://assets.coingecko.com/coins/images/1094/large/tron-logo.png" alt="TRX" class="w-8 h-8 rounded-full">
+                            </div>
+                            <div class="flex-1 text-left">
+                                <div class="font-medium text-white">TRON</div>
+                                <div class="text-xs text-gray-400">TRX</div>
+                            </div>
+                            <div class="px-2 py-1 bg-orange-500/20 border border-orange-500/30 rounded text-xs font-semibold text-orange-300">
+                                TRX
+                            </div>
+                            <div class="text-orange-400 hidden currency-check">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 6 9 17l-5-5"></path>
+                                </svg>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6 p-4 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:border-amber-500/40 transition-all duration-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <div class="text-sm font-medium text-amber-400 mb-1 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-info w-4 h-4">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 16v-4"></path>
+                                <path d="M12 8h.01"></path>
+                            </svg>
+                            Your Username (needed for checkout)
+                        </div>
+                        <div class="text-white font-mono bg-amber-500/10 px-3 py-1.5 rounded border border-amber-500/20 inline-block" id="username-text">
+                            <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                        </div>
+                    </div>
+                    <button type="button" id="copy-username-btn" class="p-2 rounded-lg bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-all duration-200 flex items-center gap-1 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy w-4 h-4">
+                            <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path>
+                        </svg>
+                        Copy
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4 p-5 sm:p-6 rounded-xl bg-gradient-to-br from-purple-500/10 to-fuchsia-500/5 border border-purple-500/20 mb-6 hover:shadow-md hover:shadow-purple-500/5 transition-all duration-300">
+                <div>
+                    <div class="text-white font-medium mb-1 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dollar-sign w-4 h-4 text-purple-400">
+                            <line x1="12" x2="12" y1="2" y2="22"></line>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Payment Summary
+                    </div>
+                    <div class="text-sm text-zinc-400">
+                        <span class="flex items-center gap-1">
+                            <span class="text-purple-400 font-medium" data-summary-amount>$0.00</span> will be added to your balance
+                        </span>
+                    </div>
+                </div>
+                <button type="submit" class="px-5 sm:px-6 py-3 rounded-lg text-white font-medium shadow-lg transition-all duration-200 flex items-center gap-2 w-full sm:w-auto justify-center bg-zinc-800 cursor-not-allowed opacity-50" disabled="">
+                    Proceed to Payment
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right w-4 h-4">
+                        <path d="M5 12h14"></path>
+                        <path d="m12 5 7 7-7 7"></path>
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Spotlight Effect Script -->
+    <script>
+        const cards = document.querySelectorAll('.spotlight-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        const API_URL = '<%= apiUrl || "/api" %>';
+
+        let selectedPaymentMethod = 'crypto'; // Only crypto available
+        let selectedCurrency = 'BTC'; // Default to BTC
+
+        const currencySelectBtn = document.getElementById('currency-select-btn');
+        const currencyDropdown = document.getElementById('currency-dropdown-menu');
+        const selectedCurrencyName = document.getElementById('selected-currency-name');
+        const selectedCurrencyIconContainer = document.getElementById('selected-currency-icon-container');
+        const currencyChevron = document.getElementById('currency-chevron');
+
+        const currencyData = {
+            'BTC': {
+                name: 'Bitcoin',
+                icon: `<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="w-8 h-8 text-[#F7931A]"><path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zm-141.651-35.33c4.937-32.999-20.191-50.739-54.55-62.573l11.146-44.702-27.213-6.781-10.851 43.524c-7.154-1.783-14.502-3.464-21.803-5.13l10.929-43.81-27.198-6.781-11.153 44.686c-5.922-1.349-11.735-2.682-17.377-4.084l.031-.14-37.53-9.37-7.239 29.062s20.191 4.627 19.765 4.913c11.022 2.751 13.014 10.044 12.68 15.825l-12.696 50.925c.76.194 1.744.473 2.829.907-.907-.225-1.876-.473-2.876-.713l-17.796 71.338c-1.349 3.348-4.767 8.37-12.471 6.464.271.395-19.78-4.937-19.78-4.937l-13.51 31.147 35.414 8.827c6.588 1.651 13.045 3.379 19.4 5.006l-11.262 45.213 27.182 6.781 11.153-44.733a1038.209 1038.209 0 0 0 21.687 5.627l-11.115 44.523 27.213 6.781 11.262-45.128c46.404 8.781 81.299 5.239 95.986-36.727 11.836-33.79-.589-53.281-25.004-65.991 17.78-4.098 31.174-15.792 34.747-39.949zm-62.177 87.179c-8.41 33.79-65.308 15.523-83.755 10.943l14.944-59.899c18.446 4.603 77.6 13.717 68.811 48.956zm8.417-87.667c-7.673 30.736-55.031 15.12-70.393 11.292l13.548-54.327c15.363 3.828 64.836 10.973 56.845 43.035z"></path></svg>`,
+                color: '#F7931A'
+            },
+            'USDTTRX': {
+                name: 'Tether',
+                icon: `<img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" alt="USDT" class="w-8 h-8 rounded-full">`,
+                color: '#ef0027'
+            },
+            'TRX': {
+                name: 'TRON',
+                icon: `<img src="https://assets.coingecko.com/coins/images/1094/large/tron-logo.png" alt="TRX" class="w-8 h-8 rounded-full">`,
+                color: '#ff0019'
+            }
+        };
+
+        function updateSelectedCurrency(currency) {
+            const data = currencyData[currency];
+            if (data) {
+                selectedCurrencyName.textContent = data.name;
+                selectedCurrencyIconContainer.innerHTML = data.icon;
+            }
+        }
+
+        if (currencySelectBtn && currencyDropdown) {
+            currencySelectBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = !currencyDropdown.classList.contains('hidden');
+                
+                if (isOpen) {
+                    currencyDropdown.classList.add('hidden');
+                    currencyChevron.style.transform = 'rotate(0deg)';
+                } else {
+                    currencyDropdown.classList.remove('hidden');
+                    currencyChevron.style.transform = 'rotate(180deg)';
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                const container = document.getElementById('currency-dropdown-container');
+                if (container && !container.contains(e.target)) {
+                    currencyDropdown.classList.add('hidden');
+                    currencyChevron.style.transform = 'rotate(0deg)';
+                }
+            });
+
+            document.querySelectorAll('.currency-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const currency = this.getAttribute('data-currency');
+                    selectedCurrency = currency;
+
+                    updateSelectedCurrency(currency);
+
+                    document.querySelectorAll('.currency-check').forEach(check => {
+                        check.classList.add('hidden');
+                    });
+                    const checkIcon = this.querySelector('.currency-check');
+                    if (checkIcon) {
+                        checkIcon.classList.remove('hidden');
+                    }
+
+                    currencyDropdown.classList.add('hidden');
+                    currencyChevron.style.transform = 'rotate(0deg)';
+                });
+            });
+        }
+
+        updateSelectedCurrency('BTC');
+
+        let selectedBalanceAmount = null;
+
+        const amountInput = document.getElementById('amount');
+        const MIN_AMOUNT = 20; // Minimum $20
+        
+        if (amountInput) {
+            amountInput.addEventListener('input', function() {
+                const value = parseFloat(this.value) || 0;
+                
+                if (value > 0 && value < MIN_AMOUNT) {
+                    this.setCustomValidity(`Minimum amount must be $${MIN_AMOUNT}`);
+                    this.reportValidity();
+                    selectedBalanceAmount = null;
+                } else if (value >= MIN_AMOUNT) {
+                    this.setCustomValidity('');
+                    selectedBalanceAmount = value;
+                } else {
+                    this.setCustomValidity('');
+                    selectedBalanceAmount = null;
+                }
+                
+                updatePaymentSummary();
+                updateProceedButton();
+            });
+            
+            amountInput.addEventListener('blur', function() {
+                const value = parseFloat(this.value) || 0;
+                if (value > 0 && value < MIN_AMOUNT) {
+                    this.value = MIN_AMOUNT.toFixed(2);
+                    selectedBalanceAmount = MIN_AMOUNT;
+                    updatePaymentSummary();
+                    updateProceedButton();
+                }
+            });
+        }
+
+        document.querySelectorAll('[data-preset-amount]')?.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const amount = parseFloat(this.getAttribute('data-preset-amount'));
+                selectedBalanceAmount = amount;
+                
+                if (amountInput) {
+                    amountInput.value = amount.toFixed(2);
+                }
+                
+                document.querySelectorAll('[data-preset-amount]').forEach(b => {
+                    b.classList.remove('bg-gradient-to-r', 'from-purple-500/20', 'to-fuchsia-500/20', 'border-purple-500/30', 'text-purple-400');
+                    b.classList.add('bg-zinc-800/50', 'border-zinc-700/50', 'text-zinc-400');
+                });
+                
+                this.classList.add('bg-gradient-to-r', 'from-purple-500/20', 'to-fuchsia-500/20', 'border-purple-500/30', 'text-purple-400');
+                this.classList.remove('bg-zinc-800/50', 'border-zinc-700/50', 'text-zinc-400');
+                
+                updatePaymentSummary();
+                updateProceedButton();
+            });
+        });
+
+        function selectBalanceAmount(amount) {
+            selectedBalanceAmount = amount;
+            
+            document.querySelectorAll('.balance-option').forEach(btn => {
+                btn.classList.remove('border-purple-500', 'bg-purple-500/20');
+                btn.classList.add('border-white/10');
+            });
+            
+            const selectedBtn = document.querySelector(`[data-amount="${amount}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('border-purple-500', 'bg-purple-500/20');
+                selectedBtn.classList.remove('border-white/10');
+            }
+            
+            document.getElementById('custom-balance-amount').value = amount.toFixed(2);
+            
+            updateAddBalanceButton();
+        }
+
+        function handleCustomAmountInput() {
+            const customInput = document.getElementById('custom-balance-amount');
+            const value = parseFloat(customInput.value);
+            
+            if (!isNaN(value) && value > 0) {
+                selectedBalanceAmount = value;
+                
+                document.querySelectorAll('.balance-option').forEach(btn => {
+                    btn.classList.remove('border-purple-500', 'bg-purple-500/20');
+                    btn.classList.add('border-white/10');
+                });
+            } else {
+                selectedBalanceAmount = null;
+            }
+            
+            updateAddBalanceButton();
+        }
+
+        function updateAddBalanceButton() {
+            const addBalanceBtn = document.getElementById('add-balance-btn');
+            const addBalanceText = document.getElementById('add-balance-text');
+            
+            if (selectedBalanceAmount && selectedBalanceAmount > 0) {
+                addBalanceBtn.disabled = false;
+                addBalanceText.textContent = `Proceed to Payment`;
+            } else {
+                addBalanceBtn.disabled = true;
+                addBalanceText.textContent = 'Select or enter amount';
+            }
+        }
+
+        function updatePaymentSummary() {
+            const summaryAmount = document.querySelector('[data-summary-amount]');
+            if (summaryAmount) {
+                if (selectedBalanceAmount && selectedBalanceAmount > 0) {
+                    summaryAmount.textContent = `$${selectedBalanceAmount.toFixed(2)}`;
+                } else {
+                    summaryAmount.textContent = '$0.00';
+                }
+            }
+        }
+
+        function updateProceedButton() {
+            const proceedBtn = document.querySelector('[type="submit"]');
+            const MIN_AMOUNT = 20; // Minimum $20
+            
+            if (proceedBtn) {
+                if (selectedBalanceAmount && selectedBalanceAmount >= MIN_AMOUNT) {
+                    proceedBtn.disabled = false;
+                    proceedBtn.classList.remove('bg-zinc-800', 'cursor-not-allowed', 'opacity-50');
+                    proceedBtn.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'hover:from-purple-500', 'hover:to-pink-500');
+                } else {
+                    proceedBtn.disabled = true;
+                    proceedBtn.classList.add('bg-zinc-800', 'cursor-not-allowed', 'opacity-50');
+                    proceedBtn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'hover:from-purple-500', 'hover:to-pink-500');
+                }
+            }
+        }
+
+        const paymentForm = document.querySelector('form') || document.querySelector('.spotlight-card');
+        if (paymentForm && !paymentForm.hasAttribute('data-listener-added')) {
+            paymentForm.setAttribute('data-listener-added', 'true');
+            
+            const proceedBtn = document.querySelector('[type="submit"]');
+            if (proceedBtn) {
+                proceedBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    await handleAddBalance();
+                });
+            }
+        }
+
+        async function handleAddBalance() {
+            const MIN_AMOUNT = 20; // Minimum $20
+            
+            if (!selectedBalanceAmount || selectedBalanceAmount <= 0) {
+                Swal.fire({
+                    title: 'Invalid Amount',
+                    text: 'Please select or enter a valid amount',
+                    icon: 'warning',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            if (selectedBalanceAmount < MIN_AMOUNT) {
+                Swal.fire({
+                    title: 'Minimum Amount Required',
+                    text: `Minimum payment amount must be $${MIN_AMOUNT}`,
+                    icon: 'warning',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            if (!selectedPaymentMethod) {
+                Swal.fire({
+                    title: 'Payment Method Required',
+                    text: 'Please select a payment method',
+                    icon: 'warning',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            const proceedBtn = document.querySelector('[type="submit"]');
+            const originalText = proceedBtn ? proceedBtn.innerHTML : '';
+            
+            if (proceedBtn) {
+                proceedBtn.disabled = true;
+                proceedBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Creating checkout...';
+            }
+
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                
+                if (!selectedCurrency) {
+                    Swal.fire({
+                        title: 'Currency Required',
+                        text: 'Please select a payment currency',
+                        icon: 'warning',
+                        background: '#030014',
+                        color: '#e5e7eb',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#4f46e5'
+                    });
+                    
+                    if (proceedBtn) {
+                        proceedBtn.disabled = false;
+                        proceedBtn.innerHTML = originalText;
+                    }
+                    return;
+                }
+
+                const response = await fetch(`${API_URL}/auth/balance/create-checkout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        amount: selectedBalanceAmount,
+                        paymentMethod: selectedPaymentMethod,
+                        currency: selectedCurrency
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    if (data.nowpayments) {
+                        const orderIdElement = document.createElement('div');
+                        orderIdElement.setAttribute('data-order-id', data.orderId || '');
+                        orderIdElement.style.display = 'none';
+                        document.body.appendChild(orderIdElement);
+                        
+                        showNOWPaymentsModal(data.paymentId, data.invoiceId, data.btcAmount, data.btcAddress, data.amount, data.paymentUrl, data.payCurrency || 'BTC', data.testMode || false);
+                    } else if (data.embedMode && data.checkoutUrl) {
+                        showPaymentModal(data.checkoutUrl, data.amount, data.variantId, data.selectedVariantTitle);
+                    } else if (data.checkoutUrl) {
+                        window.location.href = data.checkoutUrl;
+                    } else {
+                        throw new Error('Payment information could not be retrieved');
+                    }
+                } else {
+                    throw new Error(data.message || 'Checkout oluşturulamadı');
+                }
+            } catch (error) {
+                console.error('Error creating checkout:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'An error occurred while creating checkout. Please try again.',
+                    icon: 'error',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#ef4444'
+                });
+                
+                if (proceedBtn) {
+                    proceedBtn.disabled = false;
+                    proceedBtn.innerHTML = originalText;
+                }
+            }
+        }
+
+        function showPaymentModal(checkoutUrl, amount, variantId, selectedVariantTitle) {
+            const modalHTML = `
+                <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" style="z-index: 9999;">
+                    <div class="relative w-full max-w-5xl max-h-[95vh] bg-[#030014] border border-purple-500/20 rounded-2xl shadow-2xl overflow-hidden m-4">
+                        <!-- Modal Header -->
+                        <div class="flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-purple-900/20 to-fuchsia-900/20">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 flex items-center justify-center bg-[#F7931A]/20 rounded-full">
+                                    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="w-6 h-6 text-[#F7931A]">
+                                        <path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zm-141.651-35.33c4.937-32.999-20.191-50.739-54.55-62.573l11.146-44.702-27.213-6.781-10.851 43.524c-7.154-1.783-14.502-3.464-21.803-5.13l10.929-43.81-27.198-6.781-11.153 44.686c-5.922-1.349-11.735-2.682-17.377-4.084l.031-.14-37.53-9.37-7.239 29.062s20.191 4.627 19.765 4.913c11.022 2.751 13.014 10.044 12.68 15.825l-12.696 50.925c.76.194 1.744.473 2.829.907-.907-.225-1.876-.473-2.876-.713l-17.796 71.338c-1.349 3.348-4.767 8.37-12.471 6.464.271.395-19.78-4.937-19.78-4.937l-13.51 31.147 35.414 8.827c6.588 1.651 13.045 3.379 19.4 5.006l-11.262 45.213 27.182 6.781 11.153-44.733a1038.209 1038.209 0 0 0 21.687 5.627l-11.115 44.523 27.213 6.781 11.262-45.128c46.404 8.781 81.299 5.239 95.986-36.727 11.836-33.79-.589-53.281-25.004-65.991 17.78-4.098 31.174-15.792 34.747-39.949zm-62.177 87.179c-8.41 33.79-65.308 15.523-83.755 10.943l14.944-59.899c18.446 4.603 77.6 13.717 68.811 48.956zm8.417-87.667c-7.673 30.736-55.031 15.12-70.393 11.292l13.548-54.327c15.363 3.828 64.836 10.973 56.845 43.035z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-2xl font-bold text-white">Bitcoin Payment</h2>
+                                    <p class="text-sm text-zinc-400">${selectedVariantTitle || `Tutar: $${amount?.toFixed(2) || '0.00'}`}</p>
+                                </div>
+                            </div>
+                            <button onclick="closePaymentModal()" class="text-zinc-400 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x">
+                                    <path d="M18 6 6 18"></path>
+                                    <path d="M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Modal Content - Sell.App iframe -->
+                        <!-- SS'teki gibi direkt Bitcoin ödeme modalını göster -->
+                        <div class="relative" style="height: calc(95vh - 120px); min-height: 600px;">
+                            <iframe 
+                                id="payment-iframe"
+                                src="${checkoutUrl}" 
+                                class="w-full h-full border-0"
+                                frameborder="0"
+                                allow="payment *"
+                                allowfullscreen
+                                scrolling="auto"
+                                style="background: transparent;"
+                                sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation allow-modals"
+                            ></iframe>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            const iframe = document.getElementById('payment-iframe');
+            
+            const messageHandler = function(event) {
+                if (event.origin.includes('sell.app') || event.origin.includes('boostium.sell.app')) {
+                    if (event.data && (event.data.type === 'payment_success' || event.data.type === 'order_completed' || event.data.success)) {
+                        window.removeEventListener('message', messageHandler);
+                        closePaymentModal();
+                        
+                        Swal.fire({
+                            title: 'Payment Successful!',
+                            text: 'Your balance is being updated...',
+                            icon: 'success',
+                            background: '#030014',
+                            color: '#e5e5e5',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#10b981'
+                        }).then(() => {
+                            window.location.href = '/dashboard';
+                        });
+                    }
+                }
+            };
+            
+            window.addEventListener('message', messageHandler);
+            
+            let iframeErrorCount = 0;
+            iframe.addEventListener('load', function() {
+                console.log('Payment iframe loaded, checking for Bitcoin payment modal...');
+                
+                setTimeout(() => {
+                    try {
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+                        if (iframeDoc) {
+                            const bodyText = iframeDoc.body?.innerText || '';
+                            if (bodyText.includes('404') || bodyText.includes('Not Found') || bodyText.includes('Error')) {
+                                console.log('Checkout URL failed, trying alternative format...');
+                                iframeErrorCount++;
+                                
+                                if (iframeErrorCount === 1) {
+                                    const productUrl = checkoutUrl.includes('/product/') 
+                                        ? checkoutUrl.split('?')[0]
+                                        : checkoutUrl.replace('/checkout/', '/product/').split('?')[0];
+                                    const altUrl = `${productUrl}?variant=${variantId}&quantity=1&payment_method=BTC`;
+                                    console.log('Trying alternative URL:', altUrl);
+                                    iframe.src = altUrl;
+                                } else if (iframeErrorCount === 2) {
+                                    const baseUrl = checkoutUrl.split('?')[0].replace('/checkout/', '/product/');
+                                    const altUrl2 = `${baseUrl}?v=${variantId}&qty=1&payment=BTC`;
+                                    console.log('Trying second alternative URL:', altUrl2);
+                                    iframe.src = altUrl2;
+                                }
+                            } else {
+                                console.log('✅ Iframe loaded successfully, Bitcoin payment modal should be visible');
+                            }
+                        }
+                    } catch (e) {
+                        console.log('Cannot check iframe content (cross-origin, this is normal):', e.message);
+                        console.log('Bitcoin payment modal should be loaded via URL parameters');
+                    }
+                }, 2000);
+            });
+            
+            iframe.addEventListener('error', function() {
+                console.log('Iframe load error, trying alternative URL...');
+                if (iframeErrorCount === 0) {
+                    iframeErrorCount++;
+                    const productUrl = checkoutUrl.includes('/product/') 
+                        ? checkoutUrl.split('?')[0]
+                        : checkoutUrl.replace('/checkout/', '/product/').split('?')[0];
+                    const altUrl = `${productUrl}?variant=${variantId}&quantity=1&payment_method=BTC`;
+                    iframe.src = altUrl;
+                }
+            });
+        }
+        
+        function showNOWPaymentsModal(paymentId, invoiceId, cryptoAmount, cryptoAddress, usdAmount, paymentUrl, payCurrency, testMode) {
+            let currencyName = 'Bitcoin';
+            let currencySymbol = 'BTC';
+            let currencyIcon = `<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="w-6 h-6 text-[#F7931A]"><path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zm-141.651-35.33c4.937-32.999-20.191-50.739-54.55-62.573l11.146-44.702-27.213-6.781-10.851 43.524c-7.154-1.783-14.502-3.464-21.803-5.13l10.929-43.81-27.198-6.781-11.153 44.686c-5.922-1.349-11.735-2.682-17.377-4.084l.031-.14-37.53-9.37-7.239 29.062s20.191 4.627 19.765 4.913c11.022 2.751 13.014 10.044 12.68 15.825l-12.696 50.925c.76.194 1.744.473 2.829.907-.907-.225-1.876-.473-2.876-.713l-17.796 71.338c-1.349 3.348-4.767 8.37-12.471 6.464.271.395-19.78-4.937-19.78-4.937l-13.51 31.147 35.414 8.827c6.588 1.651 13.045 3.379 19.4 5.006l-11.262 45.213 27.182 6.781 11.153-44.733a1038.209 1038.209 0 0 0 21.687 5.627l-11.115 44.523 27.213 6.781 11.262-45.128c46.404 8.781 81.299 5.239 95.986-36.727 11.836-33.79-.589-53.281-25.004-65.991 17.78-4.098 31.174-15.792 34.747-39.949zm-62.177 87.179c-8.41 33.79-65.308 15.523-83.755 10.943l14.944-59.899c18.446 4.603 77.6 13.717 68.811 48.956zm8.417-87.667c-7.673 30.736-55.031 15.12-70.393 11.292l13.548-54.327c15.363 3.828 64.836 10.973 56.845 43.035z"></path></svg>`;
+            let currencyColor = '#F7931A';
+            let qrCodeUrl;
+            
+            if (payCurrency === 'BTC') {
+                currencyName = 'Bitcoin';
+                currencySymbol = 'BTC';
+                currencyColor = '#F7931A';
+                qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent('bitcoin:' + cryptoAddress + '?amount=' + cryptoAmount)}`;
+            } else if (payCurrency === 'USDTTRX') {
+                currencyName = 'Tether (USDT)';
+                currencySymbol = 'USDT';
+                currencyColor = '#ef0027';
+                qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(cryptoAddress)}`;
+                currencyIcon = `<img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" alt="USDT" class="w-6 h-6 rounded-full">`;
+            } else if (payCurrency === 'TRX') {
+                currencyName = 'TRON';
+                currencySymbol = 'TRX';
+                currencyColor = '#ff0019';
+                qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(cryptoAddress)}`;
+                currencyIcon = `<img src="https://assets.coingecko.com/coins/images/1094/large/tron-logo.png" alt="TRX" class="w-6 h-6 rounded-full">`;
+            } else {
+                qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent('bitcoin:' + cryptoAddress + '?amount=' + cryptoAmount)}`;
+            }
+            
+            const modalHTML = `
+                <div id="payment-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" style="z-index: 9999;">
+                    <div class="relative w-full max-w-3xl bg-[#1a1a2e] border border-[#2d2d44] rounded-lg shadow-2xl overflow-hidden m-4">
+                        <!-- Modal Header -->
+                        <div class="flex items-center justify-between px-6 py-4 border-b border-[#2d2d44] bg-[#0f0f1e]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 flex items-center justify-center" style="color: ${currencyColor}">
+                                    ${currencyIcon}
+                                </div>
+                                <h2 class="text-lg font-semibold text-white">Pay with ${currencyName}</h2>
+                            </div>
+                            <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white transition-colors p-1.5 hover:bg-white/5 rounded">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 6 6 18"></path>
+                                    <path d="M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Status Section -->
+                        <div class="px-6 py-4 border-b border-yellow-500/30 bg-yellow-500/5">
+                            <div class="flex items-center gap-3">
+                                <div id="status-spinner" class="w-5 h-5 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+                                <div>
+                                    <div class="text-yellow-400 font-medium" id="payment-status-text">Status: Waiting</div>
+                                    <div class="text-yellow-300/80 text-sm mt-1">Waiting for payment. Please send the exact amount to the address below.</div>
+                                    <div class="text-yellow-200/60 text-xs mt-2 flex items-center gap-1">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <path d="M12 16v-4"></path>
+                                            <path d="M12 8h.01"></path>
+                                        </svg>
+                                        Payment status is checked automatically every 5 seconds
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Main Content: QR Code and Payment Details -->
+                        <div class="p-6">
+                            <div class="flex gap-6 flex-col md:flex-row">
+                                <!-- Left: QR Code -->
+                                <div class="flex-shrink-0">
+                                    <div class="bg-white p-3 rounded-lg inline-block">
+                                        <img src="${qrCodeUrl}" alt="${currencyName} QR Code" class="w-64 h-64">
+                                    </div>
+                                    <div class="text-center text-sm text-gray-400 mt-2">Scan with your wallet app</div>
+                                </div>
+                                
+                                <!-- Right: Payment Details -->
+                                <div class="flex-1 space-y-4">
+                                    <!-- Amount to Pay -->
+                                    <div>
+                                        <label class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">$ Amount to Pay</label>
+                                        <div class="flex items-center gap-2 p-3 bg-[#0f0f1e] rounded-lg border border-[#2d2d44]">
+                                            ${payCurrency === 'BTC' ? `<svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" class="w-5 h-5 flex-shrink-0" style="color: ${currencyColor}"><path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zm-141.651-35.33c4.937-32.999-20.191-50.739-54.55-62.573l11.146-44.702-27.213-6.781-10.851 43.524c-7.154-1.783-14.502-3.464-21.803-5.13l10.929-43.81-27.198-6.781-11.153 44.686c-5.922-1.349-11.735-2.682-17.377-4.084l.031-.14-37.53-9.37-7.239 29.062s20.191 4.627 19.765 4.913c11.022 2.751 13.014 10.044 12.68 15.825l-12.696 50.925c.76.194 1.744.473 2.829.907-.907-.225-1.876-.473-2.876-.713l-17.796 71.338c-1.349 3.348-4.767 8.37-12.471 6.464.271.395-19.78-4.937-19.78-4.937l-13.51 31.147 35.414 8.827c6.588 1.651 13.045 3.379 19.4 5.006l-11.262 45.213 27.182 6.781 11.153-44.733a1038.209 1038.209 0 0 0 21.687 5.627l-11.115 44.523 27.213 6.781 11.262-45.128c46.404 8.781 81.299 5.239 95.986-36.727 11.836-33.79-.589-53.281-25.004-65.991 17.78-4.098 31.174-15.792 34.747-39.949zm-62.177 87.179c-8.41 33.79-65.308 15.523-83.755 10.943l14.944-59.899c18.446 4.603 77.6 13.717 68.811 48.956zm8.417-87.667c-7.673 30.736-55.031 15.12-70.393 11.292l13.548-54.327c15.363 3.828 64.836 10.973 56.845 43.035z"></path></svg>` : `<img src="https://assets.coingecko.com/coins/images/325/large/Tether.png" alt="USDT" class="w-5 h-5 flex-shrink-0 rounded-full">`}
+                                            <input type="text" id="crypto-amount-input" value="${cryptoAmount || '0'} ${currencySymbol}" readonly class="flex-1 bg-transparent text-white font-mono text-sm focus:outline-none">
+                                            <button onclick="copyCryptoAmount()" class="p-1.5 hover:bg-[#2d2d44] rounded transition-colors" title="Copy amount">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
+                                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                                                    <path d="M4 16c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Send To This Address -->
+                                    <div>
+                                        <label class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">Send To This Address</label>
+                                        <div class="flex items-center gap-2 p-3 bg-[#0f0f1e] rounded-lg border border-[#2d2d44]">
+                                            <input type="text" id="crypto-address-input" value="${cryptoAddress || ''}" readonly class="flex-1 bg-transparent text-white text-sm font-mono focus:outline-none truncate">
+                                            <button onclick="copyCryptoAddress()" class="p-1.5 hover:bg-[#2d2d44] rounded transition-colors flex-shrink-0" title="Copy address">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400">
+                                                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect>
+                                                    <path d="M4 16c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2h8c1.1 0 2 .9 2 2"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- USD Amount and Payment ID -->
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">USD Amount</label>
+                                            <div class="p-3 bg-[#0f0f1e] rounded-lg border border-[#2d2d44]">
+                                                <div class="text-white font-semibold">$${usdAmount?.toFixed(2) || '0.00'}</div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2 block">Payment ID</label>
+                                            <div class="p-3 bg-[#0f0f1e] rounded-lg border border-[#2d2d44]">
+                                                <div class="text-white text-sm font-mono">${paymentId || invoiceId || 'N/A'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Refresh Status Button -->
+                                    <button id="refresh-status-btn" onclick="checkPaymentStatus('${paymentId || invoiceId}', ${usdAmount}, '${cryptoAmount}', '${cryptoAddress}', '${payCurrency || 'BTC'}')" class="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-medium rounded-lg transition-all duration-200 flex items-center justify-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin">
+                                            <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                                        </svg>
+                                        Refresh Status
+                                    </button>
+                                    
+                                    ${testMode ? `
+                                    <!-- Test Mode: Simulate Payment Button -->
+                                    <button onclick="simulateTestPayment('${paymentId}', '${invoiceId}', ${usdAmount}, '${cryptoAmount}', '${cryptoAddress}', '${payCurrency || 'BTC'}')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-all duration-200">
+                                        🧪 Simulate Payment (Test Only)
+                                    </button>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Instructions -->
+                        <div class="px-6 py-4 border-t border-[#2d2d44] bg-[#0f0f1e]">
+                            <div class="flex items-center gap-2 mb-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-400">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M12 16v-4"></path>
+                                    <path d="M12 8h.01"></path>
+                                </svg>
+                                <h3 class="text-sm font-semibold text-white">Payment Instructions</h3>
+                            </div>
+                            <ol class="space-y-2 text-sm text-gray-300 list-decimal list-inside">
+                                <li>Send exactly <strong class="text-white">${cryptoAmount || '0'} ${currencySymbol}</strong> to the address above</li>
+                                <li>The payment will be automatically detected once confirmed on the blockchain</li>
+                                <li>Your account balance will be updated once the payment is complete</li>
+                                <li>This payment window will remain active for 60 minutes</li>
+                            </ol>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="flex items-center justify-between px-6 py-4 border-t border-[#2d2d44] bg-[#0f0f1e]">
+                            <div class="text-xs text-gray-500">
+                                Powered by <span class="font-semibold text-gray-400">NOWPayments</span>
+                            </div>
+                            <button onclick="closePaymentModal()" class="px-4 py-2 bg-[#2d2d44] hover:bg-[#3d3d54] text-white text-sm font-medium rounded-lg transition-colors">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+            
+            window.paymentStatusInterval = setInterval(() => {
+                checkPaymentStatus(paymentId || invoiceId, usdAmount, cryptoAmount, cryptoAddress, payCurrency || 'BTC');
+            }, 5000); // Check every 5 seconds for faster payment detection
+        }
+        
+        window.copyCryptoAddress = function() {
+            const input = document.getElementById('crypto-address-input');
+            if (input) {
+                input.select();
+                document.execCommand('copy');
+                Swal.fire({
+                    title: 'Copied!',
+                    text: 'Address copied to clipboard',
+                    icon: 'success',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        };
+        
+        window.copyCryptoAmount = function() {
+            const input = document.getElementById('crypto-amount-input');
+            if (input) {
+                input.select();
+                document.execCommand('copy');
+                Swal.fire({
+                    title: 'Copied!',
+                    text: 'Amount copied to clipboard',
+                    icon: 'success',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+        };
+        
+        window.simulateTestPayment = async function(paymentId, invoiceId, usdAmount, cryptoAmount, cryptoAddress, payCurrency) {
+            if (!confirm('🧪 Payment will be simulated in test mode. Do you want to continue?')) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                const response = await fetch(`${API_URL}/auth/balance/check-payment-status?paymentId=${paymentId}&forceStatus=confirmed&amount=${usdAmount}&cryptoAmount=${cryptoAmount}&cryptoAddress=${encodeURIComponent(cryptoAddress)}&payCurrency=${payCurrency || 'BTC'}&orderId=${document.querySelector('[data-order-id]')?.getAttribute('data-order-id') || ''}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.status === 'confirmed') {
+                    if (window.paymentStatusInterval) {
+                        clearInterval(window.paymentStatusInterval);
+                    }
+                    closePaymentModal();
+                    
+                    Swal.fire({
+                        title: '✅ Test Payment Successful!',
+                        text: `$${usdAmount} has been added to your balance (TEST MODE).`,
+                        icon: 'success',
+                        background: '#030014',
+                        color: '#e5e7eb',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#10b981'
+                    }).then(() => {
+                        window.location.href = '/dashboard';
+                    });
+                }
+            } catch (error) {
+                console.error('Test payment simulation error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Test payment simulation failed.',
+                    icon: 'error',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#ef4444'
+                });
+            }
+        };
+        
+        window.checkPaymentStatus = async function(paymentId, usdAmount, cryptoAmount, cryptoAddress, payCurrency) {
+            if (!paymentId) return;
+            
+            const refreshBtn = document.getElementById('refresh-status-btn');
+            if (refreshBtn) {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Checking...';
+            }
+            
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                
+                const orderId = document.querySelector('[data-order-id]')?.getAttribute('data-order-id') || '';
+                
+                let url = `${API_URL}/auth/balance/check-payment-status?paymentId=${paymentId}`;
+                if (orderId) {
+                    url += `&orderId=${encodeURIComponent(orderId)}`;
+                }
+                if (usdAmount) {
+                    url += `&amount=${usdAmount}`;
+                }
+                if (cryptoAmount) {
+                    url += `&cryptoAmount=${cryptoAmount}`;
+                }
+                if (cryptoAddress) {
+                    url += `&cryptoAddress=${encodeURIComponent(cryptoAddress)}`;
+                }
+                if (payCurrency) {
+                    url += `&payCurrency=${payCurrency}`;
+                }
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && (data.status === 'confirmed' || data.status === 'finished')) {
+                    if (window.paymentStatusInterval) {
+                        clearInterval(window.paymentStatusInterval);
+                    }
+                    
+                    const statusText = document.getElementById('payment-status-text');
+                    const statusSpinner = document.getElementById('status-spinner');
+                    if (statusText) {
+                        statusText.textContent = 'Status: Confirmed';
+                        statusText.className = 'text-green-400 font-medium';
+                    }
+                    if (statusSpinner) {
+                        statusSpinner.className = 'w-5 h-5 border-2 border-green-500 border-t-transparent rounded-full animate-spin';
+                    }
+                    
+                    setTimeout(() => {
+                        closePaymentModal();
+                        const modeText = data.testMode ? ' (TEST MODE)' : '';
+                        Swal.fire({
+                            title: 'Payment Successful!',
+                            text: `$${data.amount || usdAmount} has been added to your balance.${modeText}`,
+                            icon: 'success',
+                            background: '#030014',
+                            color: '#e5e7eb',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#10b981'
+                        }).then(() => {
+                            window.location.href = '/dashboard';
+                        });
+                    }, 1500);
+                } else {
+                    const statusText = document.getElementById('payment-status-text');
+                    if (statusText && data.status) {
+                        const statusMap = {
+                            'waiting': { text: 'Status: Waiting', color: 'text-yellow-400' },
+                            'confirming': { text: 'Status: Confirming', color: 'text-yellow-400' },
+                            'sending': { text: 'Status: Sending', color: 'text-blue-400' },
+                            'failed': { text: 'Status: Failed', color: 'text-red-400' },
+                            'expired': { text: 'Status: Expired', color: 'text-red-400' }
+                        };
+                        const statusInfo = statusMap[data.status] || { text: 'Status: ' + data.status, color: 'text-yellow-400' };
+                        statusText.textContent = statusInfo.text;
+                        statusText.className = statusInfo.color + ' font-medium';
+                    }
+                    
+                    if (refreshBtn) {
+                        refreshBtn.disabled = false;
+                        refreshBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="animate-spin">
+                                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path>
+                            </svg>
+                            Refresh Status
+                        `;
+                    }
+                }
+            } catch (error) {
+                console.error('Payment status check error:', error);
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.innerHTML = 'Refresh Status';
+                }
+            }
+        };
+        
+        window.closePaymentModal = function() {
+            if (window.paymentStatusInterval) {
+                clearInterval(window.paymentStatusInterval);
+            }
+            
+            const modal = document.getElementById('payment-modal');
+            if (modal) {
+                modal.style.opacity = '0';
+                modal.style.transition = 'opacity 0.3s';
+                setTimeout(() => {
+                    modal.remove();
+                }, 300);
+            }
+        };
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === 'true') {
+            const amount = urlParams.get('amount');
+            Swal.fire({
+                title: 'Payment Successful!',
+                text: amount ? `$${amount} will be added to your balance shortly.` : 'Your payment was successful!',
+                icon: 'success',
+                background: '#030014',
+                color: '#e5e7eb',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#10b981'
+            }).then(() => {
+                window.location.href = '/add-balance';
+            });
+        } else if (urlParams.get('canceled') === 'true') {
+            Swal.fire({
+                title: 'Payment Canceled',
+                text: 'Your payment was canceled. You can try again anytime.',
+                icon: 'info',
+                background: '#030014',
+                color: '#e5e7eb',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#4f46e5'
+            });
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                Swal.fire({
+                    title: 'Copied!',
+                    text: 'Username copied to clipboard',
+                    icon: 'success',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        const copyUsernameBtn = document.getElementById('copy-username-btn');
+        if (copyUsernameBtn) {
+            copyUsernameBtn.addEventListener('click', () => {
+                const usernameText = document.getElementById('username-text');
+                if (usernameText) {
+                    copyToClipboard(usernameText.textContent.trim());
+                }
+            });
+        }
+
+        updatePaymentSummary();
+        updateProceedButton();
+
+         const userProfileBtn = document.getElementById('user-profile-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        const chevronIcon = document.getElementById('chevron-icon');
+
+        if (userProfileBtn && userDropdown) {
+            userProfileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                chevronIcon.style.transform = userDropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userProfileBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.classList.remove('show');
+                    chevronIcon.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+
+        function copyUserId(event) {
+            const userIdElement = document.getElementById('user-id-text');
+            const userId = userIdElement ? userIdElement.getAttribute('data-user-id') : null;
+            
+            if (!userId) {
+                console.error('User ID not found');
+                return;
+            }
+            
+            navigator.clipboard.writeText(userId).then(() => {
+                const btn = event.target;
+                const originalIcon = btn.className;
+                btn.className = 'fas fa-check copy-id-btn';
+                btn.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    btn.className = originalIcon;
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+                window.location.href = '/login';
+            }
+        }
+
+    </script>
+</body>
+</html>
+

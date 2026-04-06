@@ -1,0 +1,1926 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || 'Admin Dashboard | Boostium' %></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#030014',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #030014 0%, #1a0a2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        .spotlight-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .spotlight-card::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255, 255, 255, 0.06), transparent 40%);
+            z-index: 1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        .spotlight-card:hover::before {
+            opacity: 1;
+        }
+        .spotlight-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="font-sans">
+    <!-- Navigation -->
+    <nav class="bg-[#0a0a1a] border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-4">
+                    <a href="/dashboard" class="text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                        <i class="fas fa-shield-alt mr-2"></i> Admin Panel
+                    </a>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="/dashboard" class="text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-arrow-left mr-2"></i> Back to Dashboard
+                    </a>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Stats Overview -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold mb-6">Dashboard Overview</h1>
+            <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Stats will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="mb-6">
+            <div class="flex gap-2 border-b border-white/10">
+                <button onclick="switchTab('users'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="users">
+                    <i class="fas fa-users mr-2"></i> Users
+                </button>
+                <button onclick="switchTab('payments'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="payments">
+                    <i class="fas fa-credit-card mr-2"></i> Payments
+                </button>
+                <button onclick="switchTab('boosts'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="boosts">
+                    <i class="fas fa-rocket mr-2"></i> Boost Packages
+                </button>
+                <button onclick="switchTab('boost-purchases'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="boost-purchases">
+                    <i class="fas fa-shopping-cart mr-2"></i> Boost Purchases
+                </button>
+                <button onclick="switchTab('settings'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="settings">
+                    <i class="fas fa-cog mr-2"></i> Settings
+                </button>
+                <button onclick="switchTab('analytics'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="analytics">
+                    <i class="fas fa-chart-line mr-2"></i> Analytics
+                </button>
+                <button onclick="switchTab('activity-logs'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="activity-logs">
+                    <i class="fas fa-history mr-2"></i> Activity Logs
+                </button>
+                <button onclick="switchTab('promo-codes'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="promo-codes">
+                    <i class="fas fa-ticket-alt mr-2"></i> Promo Codes
+                </button>
+                <button onclick="switchTab('system'); return false;" class="tab-btn px-6 py-3 font-medium transition-colors border-b-2 border-transparent hover:border-purple-500 text-gray-400" data-tab="system">
+                    <i class="fas fa-server mr-2"></i> System
+                </button>
+            </div>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content" class="min-h-[400px]">
+            <div class="text-center py-12 text-gray-400">
+                <i class="fas fa-spinner fa-spin text-4xl mb-4"></i>
+                <p>Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '<%= apiUrl || "/api" %>';
+        let currentTab = 'users';
+        let currentPage = { users: 1, payments: 1, boosts: 1, 'boost-purchases': 1 };
+
+        function getToken() {
+            return localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        }
+
+        async function loadStats() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    console.error('No token available');
+                    return;
+                }
+                
+                const response = await fetch(`${API_URL}/admin/stats`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const stats = data.stats;
+                    document.getElementById('stats-container').innerHTML = `
+                        <div class="spotlight-card rounded-xl p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm mb-1">Total Users</p>
+                                    <p class="text-3xl font-bold text-white">${stats.totalUsers}</p>
+                                </div>
+                                <div class="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-users text-blue-400 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spotlight-card rounded-xl p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm mb-1">Total Revenue</p>
+                                    <p class="text-3xl font-bold text-white">$${parseFloat(stats.totalRevenue).toLocaleString()}</p>
+                                </div>
+                                <div class="w-12 h-12 bg-green-500/20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-dollar-sign text-green-400 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spotlight-card rounded-xl p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm mb-1">Total Payments</p>
+                                    <p class="text-3xl font-bold text-white">${stats.completedPayments}/${stats.totalPayments}</p>
+                                </div>
+                                <div class="w-12 h-12 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-credit-card text-purple-400 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="spotlight-card rounded-xl p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-gray-400 text-sm mb-1">Boost Purchases</p>
+                                    <p class="text-3xl font-bold text-white">${stats.totalBoostPurchases}</p>
+                                </div>
+                                <div class="w-12 h-12 bg-pink-500/20 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-rocket text-pink-400 text-xl"></i>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+
+        async function loadTabContent(tab) {
+            const content = document.getElementById('tab-content');
+            if (!content) {
+                console.error('Tab content element not found');
+                return;
+            }
+            
+            content.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i></div>';
+
+            try {
+                switch(tab) {
+                case 'users':
+                    await loadUsers();
+                    break;
+                case 'payments':
+                    await loadPayments();
+                    break;
+                case 'boosts':
+                    await loadBoosts();
+                    break;
+                case 'boost-purchases':
+                    await loadBoostPurchases();
+                    break;
+                case 'settings':
+                    await loadSettings();
+                    break;
+                case 'analytics':
+                    await loadAnalytics();
+                    break;
+                case 'activity-logs':
+                    await loadActivityLogs();
+                    break;
+                case 'promo-codes':
+                    await loadPromoCodes();
+                    break;
+                case 'system':
+                    await loadSystem();
+                    break;
+                default:
+                    console.error('Unknown tab:', tab);
+                    content.innerHTML = '<div class="text-center py-12 text-red-400">Unknown tab</div>';
+                }
+            } catch (error) {
+                console.error('Error loading tab content:', error);
+                content.innerHTML = `<div class="text-center py-12 text-red-400">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function loadUsers(page = 1, search = '') {
+            try {
+                const token = getToken();
+                if (!token) {
+                    console.error('No token available');
+                    document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Authentication required</div>';
+                    return;
+                }
+                
+                const url = `${API_URL}/admin/users?page=${page}&limit=20${search ? `&search=${encodeURIComponent(search)}` : ''}`;
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div class="mb-4 flex justify-between items-center">
+                            <input type="text" id="user-search" placeholder="Search users..." 
+                                class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 w-64"
+                                onkeyup="searchUsers(event)">
+                            <div class="flex gap-2">
+                                <button onclick="showBulkOperations()" class="px-4 py-2 bg-orange-600 hover:bg-orange-700 rounded-lg transition-colors">
+                                    <i class="fas fa-tasks mr-2"></i> Bulk Operations
+                                </button>
+                                <button onclick="showAddUserModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                    <i class="fas fa-plus mr-2"></i> Add User
+                                </button>
+                            </div>
+                        </div>
+                        <div class="spotlight-card rounded-xl overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-white/5">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">User</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Email</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Balance</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Rank</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Payments</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/5">
+                    `;
+                    
+                    data.users.forEach(user => {
+                        html += `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
+                                            ${user.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-white">${user.name}</p>
+                                            <p class="text-xs text-gray-400">${new Date(user.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-gray-300">${user.email}</td>
+                                <td class="px-6 py-4">
+                                    <span class="text-green-400 font-semibold">$${parseFloat(user.UserBalance || 0).toFixed(2)}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs">${user.Rank || 'No Rank'}</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    ${user.banned ? 
+                                        `<span class="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">Banned</span>` : 
+                                        `<span class="px-2 py-1 bg-green-500/20 text-green-300 rounded text-xs">Active</span>`
+                                    }
+                                </td>
+                                <td class="px-6 py-4 text-gray-300">${user.totalPayments || 0}</td>
+                                <td class="px-6 py-4">
+                                    <div class="flex gap-2">
+                                        <button onclick="editUser('${user._id}')" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm transition-colors" title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        ${user.banned ? 
+                                            `<button onclick="unbanUser('${user._id}')" class="px-3 py-1 bg-green-600 hover:bg-green-700 rounded text-sm transition-colors" title="Unban">
+                                                <i class="fas fa-unlock"></i>
+                                            </button>` :
+                                            `<button onclick="banUser('${user._id}', '${user.name}')" class="px-3 py-1 bg-orange-600 hover:bg-orange-700 rounded text-sm transition-colors" title="Ban">
+                                                <i class="fas fa-ban"></i>
+                                            </button>`
+                                        }
+                                        <button onclick="addNote('${user._id}')" class="px-3 py-1 bg-yellow-600 hover:bg-yellow-700 rounded text-sm transition-colors" title="Add Note">
+                                            <i class="fas fa-sticky-note"></i>
+                                        </button>
+                                        <button onclick="deleteUser('${user._id}', '${user.name}')" class="px-3 py-1 bg-red-600 hover:bg-red-700 rounded text-sm transition-colors" title="Delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <p class="text-gray-400 text-sm">Page ${data.pagination.page} of ${data.pagination.pages}</p>
+                            <div class="flex gap-2">
+                                <button onclick="loadUsers(${data.pagination.page - 1})" ${data.pagination.page === 1 ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Previous
+                                </button>
+                                <button onclick="loadUsers(${data.pagination.page + 1})" ${data.pagination.page === data.pagination.pages ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('tab-content').innerHTML = html;
+                    currentPage.users = page;
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading users</div>';
+            }
+        }
+
+        async function loadPayments(page = 1) {
+            try {
+                const response = await fetch(`${API_URL}/admin/payments?page=${page}&limit=50`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div class="spotlight-card rounded-xl overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-white/5">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">User</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Amount</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Method</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Status</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Date</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/5">
+                    `;
+                    
+                    data.payments.forEach(payment => {
+                        const statusColors = {
+                            'confirmed': 'bg-green-500/20 text-green-300',
+                            'finished': 'bg-green-500/20 text-green-300',
+                            'waiting': 'bg-yellow-500/20 text-yellow-300',
+                            'confirming': 'bg-blue-500/20 text-blue-300',
+                            'failed': 'bg-red-500/20 text-red-300',
+                            'expired': 'bg-gray-500/20 text-gray-300'
+                        };
+                        
+                        html += `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div>
+                                        <p class="font-medium text-white">${payment.userName}</p>
+                                        <p class="text-xs text-gray-400">${payment.userEmail}</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-green-400 font-semibold">$${parseFloat(payment.amount || 0).toFixed(2)}</td>
+                                <td class="px-6 py-4 text-gray-300">${payment.paymentMethod || 'Crypto'}</td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 rounded text-xs ${statusColors[payment.status] || 'bg-gray-500/20 text-gray-300'}">
+                                        ${payment.status || 'unknown'}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-400 text-sm">${new Date(payment.createdAt).toLocaleString()}</td>
+                                <td class="px-6 py-4">
+                                    ${(payment.status === 'confirmed' || payment.status === 'finished') && payment.status !== 'refunded' ?
+                                        `<button onclick="refundPayment('${payment.paymentId}', '${payment.userId}')" class="px-3 py-1 bg-orange-600 hover:bg-orange-700 rounded text-sm transition-colors" title="Refund">
+                                            <i class="fas fa-undo"></i>
+                                        </button>` : ''
+                                    }
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <p class="text-gray-400 text-sm">Page ${data.pagination.page} of ${data.pagination.pages}</p>
+                            <div class="flex gap-2">
+                                <button onclick="loadPayments(${data.pagination.page - 1})" ${data.pagination.page === 1 ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Previous
+                                </button>
+                                <button onclick="loadPayments(${data.pagination.page + 1})" ${data.pagination.page === data.pagination.pages ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('tab-content').innerHTML = html;
+                    currentPage.payments = page;
+                }
+            } catch (error) {
+                console.error('Error loading payments:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading payments</div>';
+            }
+        }
+
+        async function loadBoosts() {
+            try {
+                const response = await fetch(`${API_URL}/admin/boosts`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div class="mb-4">
+                            <button onclick="showAddBoostModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i> Add Boost Package
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    `;
+                    
+                    data.packages.forEach(pkg => {
+                        html += `
+                            <div class="spotlight-card rounded-xl p-6">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-white mb-1">${pkg.name || `${pkg.quantity} Boosts`}</h3>
+                                        <p class="text-gray-400 text-sm">${pkg.quantity} members • ${pkg.duration} month${pkg.duration > 1 ? 's' : ''}</p>
+                                        <p class="text-gray-400 text-sm">$${pkg.pricePerBoost ? pkg.pricePerBoost.toFixed(2) : '0.00'} per boost</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-2xl font-bold text-green-400">$${pkg.price}</p>
+                                    </div>
+                                </div>
+                                <div class="mb-4">
+                                    <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                                        pkg.inStock ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
+                                    }">
+                                        ${pkg.inStock ? 'In Stock' : 'Out of Stock'}
+                                    </span>
+                                </div>
+                                <div class="flex gap-2 mt-4">
+                                    <button onclick="toggleBoostStock('${pkg._id}', ${!pkg.inStock})" 
+                                        class="px-3 py-2 ${pkg.inStock ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700'} rounded-lg transition-colors">
+                                        <i class="fas fa-${pkg.inStock ? 'times' : 'check'} mr-2"></i>
+                                        ${pkg.inStock ? 'Out of Stock' : 'In Stock'}
+                                    </button>
+                                    <button onclick="editBoost('${pkg._id}')" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button onclick="deleteBoost('${pkg._id}')" class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `</div>`;
+                    document.getElementById('tab-content').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading boosts:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading boost packages</div>';
+            }
+        }
+
+        async function loadBoostPurchases(page = 1) {
+            try {
+                const response = await fetch(`${API_URL}/admin/boost-purchases?page=${page}&limit=50`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div class="spotlight-card rounded-xl overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-white/5">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">User</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Package</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Price</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Discord</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/5">
+                    `;
+                    
+                    data.purchases.forEach(purchase => {
+                        html += `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div>
+                                        <p class="font-medium text-white">${purchase.userName}</p>
+                                        <p class="text-xs text-gray-400">${purchase.userEmail}</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-white font-medium">${purchase.packageName}</p>
+                                    <p class="text-xs text-gray-400">${purchase.quantity} members • ${purchase.duration} month${purchase.duration > 1 ? 's' : ''}</p>
+                                </td>
+                                <td class="px-6 py-4 text-green-400 font-semibold">$${parseFloat(purchase.price || 0).toFixed(2)}</td>
+                                <td class="px-6 py-4">
+                                    <a href="${purchase.discordInvite}" target="_blank" class="text-blue-400 hover:text-blue-300">
+                                        ${purchase.discordInvite}
+                                    </a>
+                                </td>
+                                <td class="px-6 py-4 text-gray-400 text-sm">${new Date(purchase.createdAt).toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <p class="text-gray-400 text-sm">Page ${data.pagination.page} of ${data.pagination.pages}</p>
+                            <div class="flex gap-2">
+                                <button onclick="loadBoostPurchases(${data.pagination.page - 1})" ${data.pagination.page === 1 ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Previous
+                                </button>
+                                <button onclick="loadBoostPurchases(${data.pagination.page + 1})" ${data.pagination.page === data.pagination.pages ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('tab-content').innerHTML = html;
+                    currentPage['boost-purchases'] = page;
+                }
+            } catch (error) {
+                console.error('Error loading boost purchases:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading boost purchases</div>';
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const response = await fetch(`${API_URL}/admin/settings`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const settings = data.settings;
+                    const generalSettings = settings.GeneralSettings || {};
+                    const securitySettings = settings.SecuritySettings || {};
+                    
+                    document.getElementById('tab-content').innerHTML = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div class="spotlight-card rounded-xl p-6">
+                                <h2 class="text-2xl font-bold mb-6">Statistics</h2>
+                                <form onsubmit="saveSettings(event)">
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Purchased Boosts</label>
+                                            <input type="number" id="purchased-boosts" value="${settings.PurchasedBoosts || 0}" 
+                                                class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Successful Orders</label>
+                                            <input type="number" id="successful-orders" value="${settings.SuccessfulOrders || 0}" 
+                                                class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Boosted Servers</label>
+                                            <input type="number" id="boosted-servers" value="${settings.BoostedServers || 0}" 
+                                                class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500">
+                                        </div>
+                                        <button type="submit" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                            Save Statistics
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="spotlight-card rounded-xl p-6">
+                                <h2 class="text-2xl font-bold mb-6">General Settings</h2>
+                                <form onsubmit="saveGeneralSettings(event)">
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Site Name</label>
+                                            <input type="text" id="site-name" value="${generalSettings.siteName || ''}" 
+                                                class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Site Description</label>
+                                            <textarea id="site-description" rows="3"
+                                                class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500">${generalSettings.siteDescription || ''}</textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-400 mb-2">Site URL</label>
+                                            <input type="url" id="site-url" value="${generalSettings.siteUrl || ''}" 
+                                                class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500">
+                                        </div>
+                                        <button type="submit" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                            Save General Settings
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading settings</div>';
+            }
+        }
+
+        async function saveGeneralSettings(event) {
+            event.preventDefault();
+            try {
+                const response = await fetch(`${API_URL}/admin/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        GeneralSettings: {
+                            siteName: document.getElementById('site-name').value,
+                            siteDescription: document.getElementById('site-description').value,
+                            siteUrl: document.getElementById('site-url').value
+                        }
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire('Success!', 'General settings saved successfully', 'success');
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+
+        async function showBulkOperations() {
+            const { value: formValues } = await Swal.fire({
+                title: 'Bulk Operations',
+                html: `
+                    <div class="text-left space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">User IDs (comma separated)</label>
+                            <input id="bulk-user-ids" type="text" placeholder="userId1, userId2, userId3" 
+                                class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Action</label>
+                            <select id="bulk-action" class="w-full px-3 py-2 border rounded">
+                                <option value="add_balance">Add Balance</option>
+                                <option value="ban">Ban Users</option>
+                                <option value="unban">Unban Users</option>
+                            </select>
+                        </div>
+                        <div id="bulk-value-container">
+                            <label class="block text-sm font-medium mb-1">Value</label>
+                            <input id="bulk-value" type="text" placeholder="Amount or reason" 
+                                class="w-full px-3 py-2 border rounded">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Execute',
+                preConfirm: async () => {
+                    const userIds = document.getElementById('bulk-user-ids').value.split(',').map(id => id.trim()).filter(id => id);
+                    const action = document.getElementById('bulk-action').value;
+                    const value = document.getElementById('bulk-value').value;
+                    
+                    if (userIds.length === 0) {
+                        Swal.showValidationMessage('Please enter at least one user ID');
+                        return false;
+                    }
+                    
+                    const response = await fetch(`${API_URL}/admin/users/bulk`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ userIds, action, value })
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.success) throw new Error(data.message);
+                    return data;
+                }
+            });
+            
+            if (formValues) {
+                Swal.fire('Success!', formValues.message, 'success');
+                loadUsers(currentPage.users);
+            }
+        }
+
+        async function editUser(userId) {
+            try {
+                const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const user = data.user;
+                    Swal.fire({
+                        title: 'Edit User',
+                        html: `
+                            <div class="text-left space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Balance</label>
+                                    <input id="edit-balance" type="number" value="${user.UserBalance || 0}" 
+                                        class="w-full px-3 py-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Rank</label>
+                                    <input id="edit-rank" type="text" value="${user.Rank || ''}" 
+                                        class="w-full px-3 py-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Rank XP</label>
+                                    <input id="edit-rank-xp" type="number" value="${user.RankXP || 0}" 
+                                        class="w-full px-3 py-2 border rounded">
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Save',
+                        preConfirm: async () => {
+                            const balance = document.getElementById('edit-balance').value;
+                            const rank = document.getElementById('edit-rank').value;
+                            const rankXP = document.getElementById('edit-rank-xp').value;
+                            
+                            const updateResponse = await fetch(`${API_URL}/admin/users/${userId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${getToken()}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({ balance, rank, rankXP })
+                            });
+                            
+                            const updateData = await updateResponse.json();
+                            if (!updateData.success) throw new Error(updateData.message);
+                            return updateData;
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            Swal.fire('Success!', 'User updated successfully', 'success');
+                            loadUsers(currentPage.users);
+                        }
+                    });
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+
+        async function deleteUser(userId, userName) {
+            Swal.fire({
+                title: 'Delete User?',
+                text: `Are you sure you want to delete ${userName}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`${API_URL}/admin/users/${userId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${getToken()}` }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire('Deleted!', 'User has been deleted.', 'success');
+                            loadUsers(currentPage.users);
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
+                    }
+                }
+            });
+        }
+
+        async function saveSettings(event) {
+            event.preventDefault();
+            try {
+                const response = await fetch(`${API_URL}/admin/settings`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        PurchasedBoosts: parseInt(document.getElementById('purchased-boosts').value),
+                        SuccessfulOrders: parseInt(document.getElementById('successful-orders').value),
+                        BoostedServers: parseInt(document.getElementById('boosted-servers').value)
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire('Success!', 'Settings saved successfully', 'success');
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+
+        function searchUsers(event) {
+            if (event.key === 'Enter') {
+                const search = event.target.value;
+                loadUsers(1, search);
+            }
+        }
+
+        function showAddUserModal() {
+            Swal.fire({
+                title: 'Add User',
+                text: 'User creation functionality would require backend endpoint. Currently users register themselves.',
+                icon: 'info',
+                confirmButtonText: 'OK'
+            });
+        }
+
+        function showAddBoostModal() {
+            Swal.fire({
+                title: 'Add Boost Package',
+                html: `
+                    <div class="text-left space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Package Name</label>
+                            <input id="boost-name" type="text" class="w-full px-3 py-2 border rounded" placeholder="4 Boosts Package">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Quantity</label>
+                            <input id="boost-quantity" type="number" min="1" class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Price ($)</label>
+                                <input id="boost-price" type="number" step="0.01" min="0" class="w-full px-3 py-2 border rounded">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Price Per Boost ($)</label>
+                                <input id="boost-price-per-boost" type="number" step="0.01" min="0" class="w-full px-3 py-2 border rounded">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Duration (months)</label>
+                            <select id="boost-duration" class="w-full px-3 py-2 border rounded">
+                                <option value="1">1 Month</option>
+                                <option value="3">3 Months</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="boost-in-stock" checked class="w-5 h-5">
+                            <label for="boost-in-stock" class="text-sm font-medium">In Stock</label>
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Create',
+                preConfirm: async () => {
+                    const name = document.getElementById('boost-name').value;
+                    const quantity = document.getElementById('boost-quantity').value;
+                    const price = document.getElementById('boost-price').value;
+                    const pricePerBoost = document.getElementById('boost-price-per-boost').value;
+                    const duration = document.getElementById('boost-duration').value;
+                    const inStock = document.getElementById('boost-in-stock').checked;
+                    
+                    if (!name || !quantity || !price || !pricePerBoost || !duration) {
+                        Swal.showValidationMessage('All fields are required');
+                        return false;
+                    }
+                    
+                    const response = await fetch(`${API_URL}/admin/boosts`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name,
+                            quantity: parseInt(quantity),
+                            price: parseFloat(price),
+                            pricePerBoost: parseFloat(pricePerBoost),
+                            duration: parseInt(duration),
+                            inStock
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.success) throw new Error(data.message);
+                    return data;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Success!', 'Boost package created', 'success');
+                    loadBoosts();
+                }
+            });
+        }
+
+        async function toggleBoostStock(packageId, inStock) {
+            try {
+                const response = await fetch(`${API_URL}/admin/boosts/${packageId}/stock`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ inStock })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire('Success!', `Stock status updated`, 'success');
+                    loadBoosts();
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+
+        async function editBoost(packageId) {
+            try {
+                const response = await fetch(`${API_URL}/admin/boosts`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const pkg = data.packages.find(p => p._id === packageId);
+                    if (!pkg) return;
+                    
+                    const { value: formValues } = await Swal.fire({
+                        title: 'Edit Boost Package',
+                        html: `
+                            <div class="text-left space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Package Name</label>
+                                    <input id="edit-boost-name" type="text" value="${pkg.name || ''}" class="w-full px-3 py-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Quantity</label>
+                                    <input id="edit-boost-quantity" type="number" min="1" value="${pkg.quantity || 0}" class="w-full px-3 py-2 border rounded">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Price ($)</label>
+                                        <input id="edit-boost-price" type="number" step="0.01" min="0" value="${pkg.price || 0}" class="w-full px-3 py-2 border rounded">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Price Per Boost ($)</label>
+                                        <input id="edit-boost-price-per-boost" type="number" step="0.01" min="0" value="${pkg.pricePerBoost || 0}" class="w-full px-3 py-2 border rounded">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Duration (months)</label>
+                                    <select id="edit-boost-duration" class="w-full px-3 py-2 border rounded">
+                                        <option value="1" ${pkg.duration === 1 ? 'selected' : ''}>1 Month</option>
+                                        <option value="3" ${pkg.duration === 3 ? 'selected' : ''}>3 Months</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <input type="checkbox" id="edit-boost-in-stock" ${pkg.inStock ? 'checked' : ''} class="w-5 h-5">
+                                    <label for="edit-boost-in-stock" class="text-sm font-medium">In Stock</label>
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Save',
+                        preConfirm: async () => {
+                            const name = document.getElementById('edit-boost-name').value;
+                            const quantity = document.getElementById('edit-boost-quantity').value;
+                            const price = document.getElementById('edit-boost-price').value;
+                            const pricePerBoost = document.getElementById('edit-boost-price-per-boost').value;
+                            const duration = document.getElementById('edit-boost-duration').value;
+                            const inStock = document.getElementById('edit-boost-in-stock').checked;
+                            
+                            if (!name || !quantity || !price || !pricePerBoost || !duration) {
+                                Swal.showValidationMessage('All fields are required');
+                                return false;
+                            }
+                            
+                            const updateResponse = await fetch(`${API_URL}/admin/boosts/${packageId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${getToken()}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    name,
+                                    quantity: parseInt(quantity),
+                                    price: parseFloat(price),
+                                    pricePerBoost: parseFloat(pricePerBoost),
+                                    duration: parseInt(duration),
+                                    inStock
+                                })
+                            });
+                            
+                            const updateData = await updateResponse.json();
+                            if (!updateData.success) throw new Error(updateData.message);
+                            return updateData;
+                        }
+                    });
+                    
+                    if (formValues) {
+                        Swal.fire('Success!', 'Boost package updated', 'success');
+                        loadBoosts();
+                    }
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+
+
+        async function deleteBoost(packageId) {
+            Swal.fire({
+                title: 'Delete Boost Package?',
+                text: 'Are you sure you want to delete this boost package?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                confirmButtonText: 'Yes, delete it!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`${API_URL}/admin/boosts/${packageId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${getToken()}` }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire('Deleted!', 'Boost package has been deleted.', 'success');
+                            loadBoosts();
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
+                    }
+                }
+            });
+        }
+
+        async function banUser(userId, userName) {
+            const { value: reason } = await Swal.fire({
+                title: 'Ban User',
+                input: 'text',
+                inputLabel: `Ban reason for ${userName}`,
+                inputPlaceholder: 'Enter ban reason...',
+                showCancelButton: true,
+                confirmButtonText: 'Ban User',
+                confirmButtonColor: '#d33'
+            });
+            
+            if (reason !== undefined) {
+                try {
+                    const response = await fetch(`${API_URL}/admin/users/${userId}/ban`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ reason })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire('Banned!', 'User has been banned.', 'success');
+                        loadUsers(currentPage.users);
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        }
+
+        async function unbanUser(userId) {
+            Swal.fire({
+                title: 'Unban User?',
+                text: 'Are you sure you want to unban this user?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, unban!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`${API_URL}/admin/users/${userId}/unban`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${getToken()}` }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire('Unbanned!', 'User has been unbanned.', 'success');
+                            loadUsers(currentPage.users);
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
+                    }
+                }
+            });
+        }
+
+        async function addNote(userId) {
+            const { value: note } = await Swal.fire({
+                title: 'Add Admin Note',
+                input: 'textarea',
+                inputLabel: 'Note',
+                inputPlaceholder: 'Enter note...',
+                showCancelButton: true,
+                confirmButtonText: 'Add Note'
+            });
+            
+            if (note) {
+                try {
+                    const response = await fetch(`${API_URL}/admin/users/${userId}/notes`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ note })
+                    });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire('Success!', 'Note added successfully', 'success');
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                } catch (error) {
+                    Swal.fire('Error', error.message, 'error');
+                }
+            }
+        }
+
+        async function refundPayment(paymentId, userId) {
+            Swal.fire({
+                title: 'Refund Payment?',
+                text: 'This will refund the payment amount to user balance.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, refund!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`${API_URL}/admin/payments/${paymentId}/refund?userId=${userId}`, {
+                            method: 'POST',
+                            headers: { 'Authorization': `Bearer ${getToken()}` }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire('Refunded!', 'Payment has been refunded.', 'success');
+                            loadPayments(currentPage.payments);
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
+                    }
+                }
+            });
+        }
+
+        async function loadAnalytics() {
+            try {
+                const response = await fetch(`${API_URL}/admin/analytics?period=30`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const analytics = data.analytics;
+                    
+                    const revenueCtx = document.createElement('canvas');
+                    revenueCtx.id = 'revenueChart';
+                    const revenueLabels = Object.keys(analytics.revenueByDay);
+                    const revenueData = Object.values(analytics.revenueByDay);
+                    
+                    const growthCtx = document.createElement('canvas');
+                    growthCtx.id = 'growthChart';
+                    const growthLabels = Object.keys(analytics.userGrowthByDay);
+                    const growthData = Object.values(analytics.userGrowthByDay);
+                    
+                    let html = `
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                            <div class="spotlight-card rounded-xl p-6">
+                                <h3 class="text-xl font-bold mb-4">Revenue (Last 30 Days)</h3>
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                            <div class="spotlight-card rounded-xl p-6">
+                                <h3 class="text-xl font-bold mb-4">User Growth (Last 30 Days)</h3>
+                                <canvas id="growthChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="spotlight-card rounded-xl p-6">
+                            <h3 class="text-xl font-bold mb-4">Top Boost Packages</h3>
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-white/5">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left">Package</th>
+                                            <th class="px-4 py-2 text-left">Duration</th>
+                                            <th class="px-4 py-2 text-left">Sales</th>
+                                            <th class="px-4 py-2 text-left">Revenue</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+                    
+                    analytics.topPackages.forEach(pkg => {
+                        html += `
+                            <tr class="border-t border-white/5">
+                                <td class="px-4 py-2">${pkg.name}</td>
+                                <td class="px-4 py-2">${pkg.duration} month${pkg.duration > 1 ? 's' : ''}</td>
+                                <td class="px-4 py-2">${pkg.count}</td>
+                                <td class="px-4 py-2 text-green-400">$${pkg.revenue.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('tab-content').innerHTML = html;
+                    
+                    new Chart(document.getElementById('revenueChart'), {
+                        type: 'line',
+                        data: {
+                            labels: revenueLabels,
+                            datasets: [{
+                                label: 'Revenue ($)',
+                                data: revenueData,
+                                borderColor: 'rgb(168, 85, 247)',
+                                backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { labels: { color: '#fff' } }
+                            },
+                            scales: {
+                                y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                                x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                            }
+                        }
+                    });
+                    
+                    new Chart(document.getElementById('growthChart'), {
+                        type: 'bar',
+                        data: {
+                            labels: growthLabels,
+                            datasets: [{
+                                label: 'New Users',
+                                data: growthData,
+                                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                                borderColor: 'rgb(59, 130, 246)'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: { labels: { color: '#fff' } }
+                            },
+                            scales: {
+                                y: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+                                x: { ticks: { color: '#fff' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading analytics</div>';
+            }
+        }
+
+        async function loadActivityLogs(page = 1) {
+            try {
+                const response = await fetch(`${API_URL}/admin/activity-logs?page=${page}&limit=50`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div class="spotlight-card rounded-xl overflow-hidden">
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead class="bg-white/5">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Action</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Admin</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Target</th>
+                                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/5">
+                    `;
+                    
+                    data.logs.forEach(log => {
+                        html += `
+                            <tr class="hover:bg-white/5 transition-colors">
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 bg-purple-500/20 text-purple-300 rounded text-xs">${log.action}</span>
+                                </td>
+                                <td class="px-6 py-4 text-gray-300">${log.adminName}</td>
+                                <td class="px-6 py-4 text-gray-300">${log.targetType}${log.targetId ? ` (${log.targetId.substring(0, 8)}...)` : ''}</td>
+                                <td class="px-6 py-4 text-gray-400 text-sm">${new Date(log.createdAt).toLocaleString()}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <p class="text-gray-400 text-sm">Page ${data.pagination.page} of ${data.pagination.pages}</p>
+                            <div class="flex gap-2">
+                                <button onclick="loadActivityLogs(${data.pagination.page - 1})" ${data.pagination.page === 1 ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Previous
+                                </button>
+                                <button onclick="loadActivityLogs(${data.pagination.page + 1})" ${data.pagination.page === data.pagination.pages ? 'disabled' : ''} 
+                                    class="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors disabled:opacity-50">
+                                    Next
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    document.getElementById('tab-content').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading activity logs:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading activity logs</div>';
+            }
+        }
+
+        async function loadPromoCodes() {
+            try {
+                const response = await fetch(`${API_URL}/admin/promo-codes`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `
+                        <div class="mb-4">
+                            <button onclick="showAddPromoModal()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <i class="fas fa-plus mr-2"></i> Add Promo Code
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    `;
+                    
+                    data.promoCodes.forEach(promo => {
+                        const isExpired = promo.validUntil && new Date(promo.validUntil) < new Date();
+                        html += `
+                            <div class="spotlight-card rounded-xl p-6 ${!promo.active || isExpired ? 'opacity-50' : ''}">
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <h3 class="text-xl font-bold text-white mb-1">${promo.code}</h3>
+                                        <p class="text-gray-400 text-sm">
+                                            ${promo.discountType === 'percentage' ? `${promo.discountValue}%` : `$${promo.discountValue}`} off
+                                        </p>
+                                    </div>
+                                    <span class="px-2 py-1 ${promo.active && !isExpired ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'} rounded text-xs">
+                                        ${promo.active && !isExpired ? 'Active' : 'Inactive'}
+                                    </span>
+                                </div>
+                                <div class="space-y-2 text-sm text-gray-400 mb-4">
+                                    <p>Min Amount: $${promo.minAmount}</p>
+                                    <p>Used: ${promo.usedCount}${promo.maxUses ? ` / ${promo.maxUses}` : ''}</p>
+                                    ${promo.validUntil ? `<p>Valid until: ${new Date(promo.validUntil).toLocaleDateString()}</p>` : ''}
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="editPromoCode('${promo._id}')" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                        <i class="fas fa-edit mr-2"></i> Edit
+                                    </button>
+                                    <button onclick="deletePromoCode('${promo._id}')" class="px-3 py-2 bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `</div>`;
+                    document.getElementById('tab-content').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading promo codes:', error);
+                document.getElementById('tab-content').innerHTML = '<div class="text-center py-12 text-red-400">Error loading promo codes</div>';
+            }
+        }
+
+        async function loadSystem() {
+            try {
+                const healthResponse = await fetch(`${API_URL}/admin/system-health`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const healthData = await healthResponse.json();
+                
+                const settingsResponse = await fetch(`${API_URL}/admin/settings`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const settingsData = await settingsResponse.json();
+                
+                console.log('LoadSystem - Settings data:', settingsData);
+                console.log('LoadSystem - Settings object:', settingsData.settings);
+                console.log('LoadSystem - GeneralSettings:', settingsData.settings?.GeneralSettings);
+                console.log('LoadSystem - Maintenance mode:', settingsData.settings?.GeneralSettings?.maintenanceMode);
+                console.log('LoadSystem - Maintenance mode type:', typeof settingsData.settings?.GeneralSettings?.maintenanceMode);
+                
+                const maintenanceMode = settingsData.success && settingsData.settings?.GeneralSettings?.maintenanceMode === true;
+                console.log('LoadSystem - Final maintenance status:', maintenanceMode);
+                
+            let html = `
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="spotlight-card rounded-xl p-6">
+                        <h3 class="text-xl font-bold mb-4">System Health</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Database:</span>
+                                <span class="${healthData.success && healthData.health.database === 'connected' ? 'text-green-400' : 'text-red-400'}">
+                                    ${healthData.success ? healthData.health.database : 'Unknown'}
+                                </span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Uptime:</span>
+                                <span class="text-white">${healthData.success ? Math.floor(healthData.health.uptime / 3600) : 0} hours</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-400">Memory Usage:</span>
+                                <span class="text-white">${healthData.success ? (healthData.health.memory.heapUsed / 1024 / 1024).toFixed(2) : 0} MB</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="spotlight-card rounded-xl p-6">
+                        <h3 class="text-xl font-bold mb-4">Export Data</h3>
+                        <div class="space-y-2">
+                            <button onclick="exportData('users', 'json')" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i> Export Users (JSON)
+                            </button>
+                            <button onclick="exportData('users', 'csv')" class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i> Export Users (CSV)
+                            </button>
+                            <button onclick="exportData('payments', 'json')" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i> Export Payments (JSON)
+                            </button>
+                            <button onclick="exportData('payments', 'csv')" class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors">
+                                <i class="fas fa-download mr-2"></i> Export Payments (CSV)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="spotlight-card rounded-xl p-6">
+                    <h3 class="text-xl font-bold mb-4">Maintenance Mode</h3>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-400">Current Status: 
+                                <span id="maintenance-status" class="${maintenanceMode ? 'text-red-400' : 'text-green-400'}">
+                                    ${maintenanceMode ? 'Enabled' : 'Disabled'}
+                                </span>
+                            </p>
+                        </div>
+                        <button id="maintenance-toggle-btn" onclick="toggleMaintenance()" class="px-4 py-2 ${maintenanceMode ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} rounded-lg transition-colors">
+                            ${maintenanceMode ? 'Disable' : 'Enable'} Maintenance
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            const tabContent = document.getElementById('tab-content');
+            if (tabContent) {
+                tabContent.innerHTML = html;
+                console.log('System tab HTML updated. Maintenance mode:', maintenanceMode);
+            } else {
+                console.error('Tab content element not found!');
+            }
+            } catch (error) {
+                console.error('Error loading system:', error);
+                const tabContent = document.getElementById('tab-content');
+                if (tabContent) {
+                    tabContent.innerHTML = '<div class="text-center py-12 text-red-400">Error loading system info</div>';
+                }
+            }
+        }
+
+        function exportData(type, format) {
+            window.open(`${API_URL}/admin/export/${type}?format=${format}&token=${getToken()}`, '_blank');
+        }
+
+        async function toggleMaintenance() {
+            try {
+                const settingsResponse = await fetch(`${API_URL}/admin/settings`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const settingsData = await settingsResponse.json();
+                
+                console.log('Current settings:', settingsData);
+                
+                if (!settingsData.success) {
+                    Swal.fire('Error', 'Failed to fetch current settings', 'error');
+                    return;
+                }
+                
+                const currentMaintenanceMode = settingsData.settings?.GeneralSettings?.maintenanceMode;
+                const currentStatus = currentMaintenanceMode === true || currentMaintenanceMode === 'true';
+                console.log('Current maintenance status:', currentStatus);
+                console.log('Current maintenance mode value:', currentMaintenanceMode);
+                console.log('Current maintenance mode type:', typeof currentMaintenanceMode);
+                
+                const { value: message, isConfirmed } = await Swal.fire({
+                    title: `${currentStatus ? 'Disable' : 'Enable'} Maintenance Mode?`,
+                    input: 'textarea',
+                    inputLabel: 'Maintenance Message (optional)',
+                    inputPlaceholder: 'Site is under maintenance...',
+                    showCancelButton: true,
+                    confirmButtonText: currentStatus ? 'Disable' : 'Enable',
+                    confirmButtonColor: currentStatus ? '#d33' : '#28a745',
+                    inputValue: settingsData.settings.GeneralSettings?.maintenanceMessage || ''
+                });
+                
+                if (isConfirmed) {
+                    const newStatus = !currentStatus;
+                    console.log('Setting maintenance to:', newStatus);
+                    
+                    try {
+                        const response = await fetch(`${API_URL}/admin/maintenance`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${getToken()}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                enabled: newStatus,
+                                message: message || 'Site is under maintenance. Please check back later.'
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        console.log('Maintenance response:', data);
+                        
+                        if (data.success) {
+                            Swal.fire('Success!', `Maintenance mode ${newStatus ? 'enabled' : 'disabled'}`, 'success');
+                            setTimeout(() => {
+                                loadSystem();
+                            }, 500);
+                        } else {
+                            Swal.fire('Error', data.message || 'Failed to update maintenance mode', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Maintenance toggle error:', error);
+                        Swal.fire('Error', error.message || 'Failed to update maintenance mode', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching settings:', error);
+                Swal.fire('Error', 'Failed to fetch current settings', 'error');
+            }
+        }
+
+        function showAddPromoModal() {
+            Swal.fire({
+                title: 'Add Promo Code',
+                html: `
+                    <div class="text-left space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Code</label>
+                            <input id="promo-code" type="text" class="w-full px-3 py-2 border rounded" placeholder="PROMO2024">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Discount Type</label>
+                            <select id="promo-type" class="w-full px-3 py-2 border rounded">
+                                <option value="percentage">Percentage</option>
+                                <option value="fixed">Fixed Amount</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Discount Value</label>
+                            <input id="promo-value" type="number" step="0.01" class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Min Amount ($)</label>
+                            <input id="promo-min" type="number" step="0.01" value="0" class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Max Uses (leave empty for unlimited)</label>
+                            <input id="promo-max" type="number" class="w-full px-3 py-2 border rounded">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Valid Until (optional)</label>
+                            <input id="promo-until" type="date" class="w-full px-3 py-2 border rounded">
+                        </div>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Create',
+                preConfirm: async () => {
+                    const code = document.getElementById('promo-code').value;
+                    const type = document.getElementById('promo-type').value;
+                    const value = document.getElementById('promo-value').value;
+                    const min = document.getElementById('promo-min').value;
+                    const max = document.getElementById('promo-max').value;
+                    const until = document.getElementById('promo-until').value;
+                    
+                    if (!code || !value) {
+                        Swal.showValidationMessage('Code and value are required');
+                        return false;
+                    }
+                    
+                    const response = await fetch(`${API_URL}/admin/promo-codes`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${getToken()}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            code,
+                            discountType: type,
+                            discountValue: parseFloat(value),
+                            minAmount: parseFloat(min) || 0,
+                            maxUses: max ? parseInt(max) : null,
+                            validUntil: until || null
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (!data.success) throw new Error(data.message);
+                    return data;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire('Success!', 'Promo code created', 'success');
+                    loadPromoCodes();
+                }
+            });
+        }
+
+        async function editPromoCode(codeId) {
+            try {
+                const response = await fetch(`${API_URL}/admin/promo-codes`, {
+                    headers: { 'Authorization': `Bearer ${getToken()}` }
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    const promo = data.promoCodes.find(p => p._id === codeId);
+                    if (!promo) return;
+                    
+                    const { value: formValues } = await Swal.fire({
+                        title: 'Edit Promo Code',
+                        html: `
+                            <div class="text-left space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Code</label>
+                                    <input id="edit-promo-code" type="text" value="${promo.code}" disabled
+                                        class="w-full px-3 py-2 border rounded bg-gray-100">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Discount Value</label>
+                                    <input id="edit-promo-value" type="number" step="0.01" value="${promo.discountValue}" 
+                                        class="w-full px-3 py-2 border rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Active</label>
+                                    <select id="edit-promo-active" class="w-full px-3 py-2 border rounded">
+                                        <option value="true" ${promo.active ? 'selected' : ''}>Active</option>
+                                        <option value="false" ${!promo.active ? 'selected' : ''}>Inactive</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Valid Until (optional)</label>
+                                    <input id="edit-promo-until" type="date" 
+                                        value="${promo.validUntil ? new Date(promo.validUntil).toISOString().split('T')[0] : ''}"
+                                        class="w-full px-3 py-2 border rounded">
+                                </div>
+                            </div>
+                        `,
+                        showCancelButton: true,
+                        confirmButtonText: 'Save',
+                        preConfirm: async () => {
+                            const value = document.getElementById('edit-promo-value').value;
+                            const active = document.getElementById('edit-promo-active').value === 'true';
+                            const until = document.getElementById('edit-promo-until').value;
+                            
+                            const updateResponse = await fetch(`${API_URL}/admin/promo-codes/${codeId}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Authorization': `Bearer ${getToken()}`,
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    discountValue: parseFloat(value),
+                                    active,
+                                    validUntil: until || null
+                                })
+                            });
+                            
+                            const updateData = await updateResponse.json();
+                            if (!updateData.success) throw new Error(updateData.message);
+                            return updateData;
+                        }
+                    });
+                    
+                    if (formValues) {
+                        Swal.fire('Success!', 'Promo code updated', 'success');
+                        loadPromoCodes();
+                    }
+                }
+            } catch (error) {
+                Swal.fire('Error', error.message, 'error');
+            }
+        }
+
+        async function deletePromoCode(codeId) {
+            Swal.fire({
+                title: 'Delete Promo Code?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete!'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`${API_URL}/admin/promo-codes/${codeId}`, {
+                            method: 'DELETE',
+                            headers: { 'Authorization': `Bearer ${getToken()}` }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.success) {
+                            Swal.fire('Deleted!', 'Promo code deleted', 'success');
+                            loadPromoCodes();
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    } catch (error) {
+                        Swal.fire('Error', error.message, 'error');
+                    }
+                }
+            });
+        }
+
+
+        function logout() {
+            localStorage.removeItem('token');
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            window.location.href = '/login';
+        }
+
+        window.switchTab = function(tab) {
+            console.log('Switching to tab:', tab);
+            currentTab = tab;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.dataset.tab === tab) {
+                    btn.classList.add('border-purple-500', 'text-purple-400');
+                    btn.classList.remove('border-transparent', 'text-gray-400');
+                } else {
+                    btn.classList.remove('border-purple-500', 'text-purple-400');
+                    btn.classList.add('border-transparent', 'text-gray-400');
+                }
+            });
+            
+            loadTabContent(tab);
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Admin dashboard initialized');
+            console.log('API_URL:', API_URL);
+            console.log('Token:', getToken() ? 'Token found' : 'No token');
+            console.log('switchTab function:', typeof window.switchTab);
+            
+            if (!getToken()) {
+                console.error('No token found, redirecting to login');
+                window.location.href = '/login';
+                return;
+            }
+            
+            loadStats();
+            switchTab('users');
+            
+            document.querySelectorAll('.spotlight-card').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+        });
+        
+        window.addEventListener('error', (e) => {
+            console.error('JavaScript error:', e.error);
+        });
+    </script>
+</body>
+</html>
+

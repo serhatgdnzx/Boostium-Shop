@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : `Order History | ${typeof siteName !== 'undefined' ? siteName : 'Boostium.shop'}` %></title>
+    <meta name="description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta name="keywords" content="<%= typeof siteKeywords !== 'undefined' ? siteKeywords : 'boosts, servers, boosting, platform' %>">
+    <meta property="og:title" content="<%= typeof siteName !== 'undefined' ? siteName : 'Boostium.shop' %>">
+    <meta property="og:description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta property="og:url" content="<%= typeof siteUrl !== 'undefined' ? siteUrl : 'https://boostium.shop' %>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#030014',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                        neon: {
+                            pink: '#F472B6',
+                            blue: '#60A5FA',
+                            purple: '#A78BFA'
+                        }
+                    },
+                    backgroundImage: {
+                        'nebula': 'radial-gradient(circle at 50% -20%, #2e1065, #030014 60%)',
+                        'card-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)'
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030014;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .spotlight-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s;
+        }
+
+        .spotlight-card::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: 3;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .spotlight-card:hover::before {
+            opacity: 1;
+        }
+
+        .spotlight-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(180deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.1) 100%);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #a78bfa;
+        }
+
+        .nav-link.active {
+            color: #a78bfa;
+        }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        .package-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .package-card:hover:not(.disabled) {
+            transform: scale(1.02);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .package-card.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .package-card.selected {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .out-of-stock-banner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        .out-of-stock-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 40px;
+            background: #dc2626;
+            transform: rotate(45deg);
+            transform-origin: top right;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            margin-top: 15px;
+            margin-right: -35px;
+        }
+        
+        .out-of-stock-banner::after {
+            content: 'OUT OF STOCK';
+            position: absolute;
+            top: 22px;
+            right: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            transform: rotate(45deg);
+            transform-origin: center;
+            text-transform: uppercase;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            z-index: 21;
+        }
+
+        .user-profile-card {
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-profile-card:hover {
+            border-color: rgba(167, 139, 250, 0.5) !important;
+        }
+
+        .user-profile-card:hover #user-profile-btn {
+            box-shadow: 
+                0 0 15px rgba(167, 139, 250, 0.6),
+                0 0 30px rgba(167, 139, 250, 0.4),
+                0 0 45px rgba(244, 114, 182, 0.3),
+                0 0 60px rgba(244, 114, 182, 0.2);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(15, 10, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 16px;
+            width: 280px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(167, 139, 250, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .status-badge {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .user-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .user-name {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-id-btn {
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 12px;
+        }
+
+        .copy-id-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .balance-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .balance-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .balance-value {
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .user-dropdown-menu {
+            padding: 8px;
+        }
+
+        .user-dropdown-item {
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        .user-dropdown-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(244, 114, 182, 0.15);
+            color: #f472b6;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .advertisement-banner {
+            max-height: 200px;
+            width: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .advertisement-banner:hover {
+            transform: scale(1.02);
+        }
+
+        .advertisement-link {
+            display: block;
+            text-decoration: none;
+        }
+
+        .advertisement-link:hover {
+            text-decoration: none;
+        }
+
+        .leaderboard-rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .leaderboard-rank-badge.rank-1 {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-2 {
+            background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+            color: #1f2937;
+        }
+
+        .leaderboard-rank-badge.rank-3 {
+            background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-other {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-row {
+            transition: background-color 0.2s;
+        }
+
+        .leaderboard-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank-badge-prestige {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+
+        .rank-badge-gold {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+
+        /* Tab Button Styling */
+        .tab-button {
+            background: transparent;
+            color: rgba(255, 255, 255, 0.6);
+            border: none;
+            position: relative;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .tab-button:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* Enhanced History Card Styles */
+        .history-card {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(15, 10, 30, 0.9) 0%, rgba(10, 5, 20, 0.9) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .history-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .history-card:hover::before {
+            left: 100%;
+        }
+
+        .history-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(139, 92, 246, 0.5);
+            box-shadow: 0 20px 40px rgba(139, 92, 246, 0.2), 0 0 60px rgba(236, 72, 153, 0.1);
+        }
+
+        .status-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            border-radius: 8px 0 0 8px;
+        }
+
+        .status-indicator.completed {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .status-indicator.waiting {
+            background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+        }
+
+        .status-indicator.confirming {
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+        }
+
+        .status-indicator.failed {
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .status-indicator.purchased {
+            background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .detail-box {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(139, 92, 246, 0.15);
+            transition: all 0.3s;
+        }
+
+        .detail-box:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateX(4px);
+        }
+
+        .amount-gradient {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .icon-glow {
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .history-card {
+            animation: slideInUp 0.5s ease-out forwards;
+        }
+
+        .history-card:nth-child(1) { animation-delay: 0.05s; }
+        .history-card:nth-child(2) { animation-delay: 0.1s; }
+        .history-card:nth-child(3) { animation-delay: 0.15s; }
+        .history-card:nth-child(4) { animation-delay: 0.2s; }
+        .history-card:nth-child(5) { animation-delay: 0.25s; }
+        .history-card:nth-child(n+6) { animation-delay: 0.3s; }
+
+        .empty-state-icon {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%);
+            border: 2px solid rgba(139, 92, 246, 0.3);
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-500 selection:text-white min-h-screen">
+
+    <!-- Background Elements -->
+    <div class="fixed top-0 left-0 w-full h-full bg-nebula -z-20"></div>
+
+     <!-- Navigation -->
+     <div class="fixed w-full z-50 top-4 flex justify-center px-4">
+        <nav class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4 flex items-center justify-between gap-6 shadow-2xl shadow-indigo-500/10 w-full max-w-6xl">
+            <!-- Left: Logo + Links -->
+            <div class="flex items-center gap-10">
+                <a href="/" class="font-bold text-xl tracking-tight flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-indigo-500"></span>
+                    Boostium
+                </a>
+                <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+                   
+                </div>
+            </div>
+
+            <!-- Right: User Profile Summary -->
+            <div class="hidden sm:flex items-center">
+                <div class="user-profile-card relative">
+                    <div id="user-profile-btn" class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-2xl px-3 py-2 shadow-lg shadow-black/40">
+                        <!-- Avatar with initials -->
+                        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold">
+                            <%
+                                let initials = 'US';
+                                if (typeof userStats !== 'undefined' && userStats) {
+                                    if (userStats.name && userStats.name.trim().length > 0) {
+                                        const parts = userStats.name.trim().split(' ');
+                                        initials = (parts[0][0] || '') + (parts[1] ? parts[1][0] : '');
+                                        initials = initials.toUpperCase();
+                                    } else if (userStats.email) {
+                                        initials = userStats.email[0].toUpperCase();
+                                    }
+                                }
+                            %>
+                            <span><%= initials %></span>
+                        </div>
+                        <!-- Name + Balance -->
+                        <div class="flex flex-col leading-tight">
+                            <span class="text-[12px] font-semibold text-gray-100 max-w-[100px] truncate">
+                                <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                            </span>
+                            <a href="/add-balance" class="text-[11px] font-semibold text-purple-300 hover:text-purple-200 transition-colors cursor-pointer">
+                                <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                    $<%= userStats.UserBalance.toFixed(2) %>
+                                <% } else { %>
+                                    $0.00
+                                <% } %>
+                            </a>
+                        </div>
+                        <i class="fas fa-chevron-down text-[9px] text-gray-400 transition-transform duration-200" id="chevron-icon"></i>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown" class="user-dropdown">
+                        <!-- Header Section -->
+                        <div class="user-dropdown-header">
+                            <!-- Status + User Info -->
+                            <div class="user-status-row">
+                                <span class="status-badge">
+                                    <%
+                                        let badgeInitials = 'US';
+                                        if (typeof userStats !== 'undefined' && userStats) {
+                                            if (userStats.name && userStats.name.trim().length > 0) {
+                                                const nameParts = userStats.name.trim().split(' ');
+                                                if (nameParts.length > 1) {
+                                                    badgeInitials = (nameParts[0][0] || '') + (nameParts[1][0] || '');
+                                                } else {
+                                                    badgeInitials = nameParts[0].substring(0, 2);
+                                                    if (badgeInitials.length < 2) {
+                                                        badgeInitials = badgeInitials + badgeInitials;
+                                                    }
+                                                }
+                                                badgeInitials = badgeInitials.toUpperCase();
+                                            } else if (userStats.email) {
+                                                badgeInitials = userStats.email.substring(0, 2).toUpperCase();
+                                            }
+                                        }
+                                    %>
+                                    <%= badgeInitials %>
+                                </span>
+                                <div class="user-info-row">
+                                    <span class="user-name">
+                                        <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- User ID -->
+                            <div class="user-info-row" style="margin-bottom: 12px;">
+                                <span class="user-id" id="user-id-text" data-user-id="<%= (typeof userStats !== 'undefined' && userStats && userStats._id) ? userStats._id.toString() : '' %>">
+                                    <% if (typeof userStats !== 'undefined' && userStats && userStats._id) { %>
+                                        <%= userStats._id.toString().substring(0, 10) %>...
+                                    <% } else { %>
+                                        N/A
+                                    <% } %>
+                                </span>
+                                <i class="fas fa-clipboard copy-id-btn" onclick="copyUserId(event)" title="Copy User ID"></i>
+                            </div>
+                            <!-- Balance -->
+                            <div class="balance-row">
+                                <div class="balance-label">
+                                    <i class="fas fa-wallet"></i>
+                                    <span>Balance:</span>
+                                </div>
+                                <a href="/add-balance" class="balance-value hover:text-purple-300 transition-colors cursor-pointer">
+                                    <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                        $<%= userStats.UserBalance.toFixed(2) %>
+                                    <% } else { %>
+                                        $0.00
+                                    <% } %>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Menu Items -->
+                        <div class="user-dropdown-menu">
+                            <div class="user-dropdown-item" onclick="window.location.href='/account-settings'">
+                                <i class="fas fa-cog"></i>
+                                <span>Account Settings</span>
+                            </div>
+                            <div class="user-dropdown-item" onclick="window.location.href='/order-history'">
+                                <i class="fas fa-history"></i>
+                                <span>Order History</span>
+                            </div>
+                            <div class="user-dropdown-item logout" onclick="handleLogout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-6xl mx-auto px-6 pt-32 pb-10">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold mb-2">Order History</h1>
+            <p class="text-gray-400">View all your transactions and purchases</p>
+        </div>
+
+        <!-- Tab Buttons -->
+        <div class="flex justify-center mb-8">
+            <div class="inline-flex gap-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-2 shadow-lg">
+                <button 
+                    id="tab-balance" 
+                    onclick="switchTab('balance')" 
+                    class="tab-button px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                >
+                    <i class="fas fa-wallet"></i>
+                    <span>Balance History</span>
+                </button>
+                <button 
+                    id="tab-boost" 
+                    onclick="switchTab('boost')" 
+                    class="tab-button px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center gap-2"
+                >
+                    <i class="fas fa-rocket"></i>
+                    <span>Boost History</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Balance History Section -->
+        <div id="balance-history-section">
+        <!-- Payment History List -->
+        <% 
+            const paymentHistory = (typeof userStats !== 'undefined' && userStats && userStats.PaymentHistory && Array.isArray(userStats.PaymentHistory)) 
+                ? userStats.PaymentHistory.sort((a, b) => {
+                    const dateA = new Date(a.createdAt || a.CreatedAt || 0);
+                    const dateB = new Date(b.createdAt || b.CreatedAt || 0);
+                    return dateB - dateA; // En yeni önce
+                })
+                : [];
+        %>
+
+        <% if (paymentHistory.length === 0) { %>
+            <!-- Empty State -->
+            <div class="rounded-2xl border-2 border-purple-500/20 bg-gradient-to-br from-[#0d0d15]/80 to-[#0d0d15]/50 backdrop-blur-sm overflow-hidden shadow-2xl shadow-purple-900/10 hover:border-purple-500/40 transition-all duration-300">
+                <div class="p-12 text-center">
+                    <div class="w-24 h-24 mx-auto mb-6 rounded-2xl empty-state-icon flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-history text-purple-400">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                            <path d="M12 7v5l4 2"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">No payments found</h3>
+                    <p class="text-zinc-400 mb-8 text-lg">You haven't made any payments yet</p>
+                    <a class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600 rounded-xl text-white font-bold shadow-xl shadow-purple-500/30 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/40" href="/add-balance">
+                        <i class="fas fa-plus"></i>
+                        <span>Add Balance</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        <% } else { %>
+            <!-- Payment History Cards -->
+            <div class="space-y-4">
+                <% paymentHistory.forEach((payment, index) => { 
+                    const status = payment.status || 'waiting';
+                    const amount = payment.amount || 0;
+                    const currency = payment.currency || 'USD';
+                    const paymentMethod = payment.paymentMethod || 'Bitcoin';
+                    const paymentId = payment.paymentId || 'N/A';
+                    const orderId = payment.orderId || 'N/A';
+                    const btcAmount = payment.btcAmount || null;
+                    const btcAddress = payment.btcAddress || null;
+                    const createdAt = payment.createdAt ? new Date(payment.createdAt) : null;
+                    const completedAt = payment.completedAt ? new Date(payment.completedAt) : null;
+                    const testMode = payment.testMode || false;
+
+                    let statusClass = '';
+                    let statusText = '';
+                    switch(status) {
+                        case 'confirmed':
+                        case 'finished':
+                            statusClass = 'bg-green-500/20 text-green-400 border-green-500/30';
+                            statusText = 'Completed';
+                            break;
+                        case 'confirming':
+                            statusClass = 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+                            statusText = 'Confirming';
+                            break;
+                        case 'waiting':
+                            statusClass = 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+                            statusText = 'Waiting';
+                            break;
+                        case 'failed':
+                            statusClass = 'bg-red-500/20 text-red-400 border-red-500/30';
+                            statusText = 'Failed';
+                            break;
+                        case 'refunded':
+                            statusClass = 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+                            statusText = 'Refunded';
+                            break;
+                        case 'expired':
+                            statusClass = 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+                            statusText = 'Expired';
+                            break;
+                        default:
+                            statusClass = 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30';
+                            statusText = status;
+                    }
+                %>
+                    <div class="history-card rounded-xl overflow-hidden shadow-xl">
+                        <!-- Status Indicator Bar -->
+                        <div class="status-indicator <%= status === 'confirmed' || status === 'finished' ? 'completed' : status === 'waiting' ? 'waiting' : status === 'confirming' ? 'confirming' : status === 'failed' ? 'failed' : 'waiting' %>"></div>
+                        
+                        <div class="p-6 pl-8 relative">
+                            <!-- Header: Amount & Status -->
+                            <div class="flex items-start justify-between mb-6">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-4 mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center border border-purple-500/30">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bitcoin text-purple-400 icon-glow">
+                                                    <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.107 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.98 3.028.348-1.97M7.48 20.364l3.126-17.727"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-3xl font-bold amount-gradient">
+                                                    $<%= amount.toFixed(2) %>
+                                                </div>
+                                                <div class="text-xs text-zinc-500 uppercase tracking-wider mt-1"><%= currency %></div>
+                                            </div>
+                                        </div>
+                                        <% if (testMode) { %>
+                                            <span class="px-3 py-1.5 text-xs font-bold bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg backdrop-blur-sm">
+                                                🧪 TEST MODE
+                                            </span>
+                                        <% } %>
+                                    </div>
+                                    <div class="flex items-center gap-2 text-sm text-zinc-400">
+                                        <i class="fas fa-wallet text-purple-400"></i>
+                                        <span><%= paymentMethod %></span>
+                                    </div>
+                                </div>
+                                <div class="px-4 py-2.5 rounded-xl border-2 <%= statusClass %> backdrop-blur-sm font-bold text-sm uppercase tracking-wider">
+                                    <%= statusText %>
+                                </div>
+                            </div>
+
+                            <!-- Details Grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                <!-- Payment ID -->
+                                <div class="detail-box rounded-xl p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-fingerprint text-purple-400 text-sm"></i>
+                                        <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Payment ID</div>
+                                    </div>
+                                    <div class="text-sm font-mono text-white break-all font-semibold"><%= paymentId %></div>
+                                </div>
+
+                                <!-- Order ID -->
+                                <div class="detail-box rounded-xl p-4">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <i class="fas fa-receipt text-pink-400 text-sm"></i>
+                                        <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Order ID</div>
+                                    </div>
+                                    <div class="text-sm font-mono text-white break-all font-semibold"><%= orderId %></div>
+                                </div>
+
+                                <!-- BTC Amount (if available) -->
+                                <% if (btcAmount) { %>
+                                    <div class="detail-box rounded-xl p-4">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="fab fa-bitcoin text-yellow-400 text-sm"></i>
+                                            <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin Amount</div>
+                                        </div>
+                                        <div class="text-base font-mono text-yellow-400 font-bold"><%= btcAmount %> BTC</div>
+                                    </div>
+                                <% } %>
+
+                                <!-- BTC Address (if available) -->
+                                <% if (btcAddress) { %>
+                                    <div class="detail-box rounded-xl p-4 md:col-span-2">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="fas fa-qrcode text-blue-400 text-sm"></i>
+                                            <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Bitcoin Address</div>
+                                        </div>
+                                        <div class="text-xs font-mono text-white break-all font-medium" title="<%= btcAddress %>"><%= btcAddress %></div>
+                                    </div>
+                                <% } %>
+                            </div>
+
+                            <!-- Dates -->
+                            <div class="flex flex-wrap items-center gap-6 text-xs pt-5 border-t border-purple-500/20">
+                                <% if (createdAt) { %>
+                                    <div class="flex items-center gap-2.5 text-zinc-400">
+                                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
+                                            <i class="fas fa-calendar-plus text-purple-400 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] uppercase tracking-wider text-zinc-500">Created</div>
+                                            <div class="text-sm font-semibold text-white"><%= createdAt.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                                <% if (completedAt && (status === 'confirmed' || status === 'finished')) { %>
+                                    <div class="flex items-center gap-2.5 text-green-400">
+                                        <div class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                                            <i class="fas fa-check-circle text-green-400 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] uppercase tracking-wider text-zinc-500">Completed</div>
+                                            <div class="text-sm font-semibold text-white"><%= completedAt.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } %>
+        </div>
+
+        <!-- Boost History Section -->
+        <div id="boost-history-section" class="hidden">
+            <% 
+                const boostHistory = (typeof userStats !== 'undefined' && userStats && userStats.BoostPurchaseHistory && Array.isArray(userStats.BoostPurchaseHistory)) 
+                    ? userStats.BoostPurchaseHistory.sort((a, b) => {
+                        const dateA = new Date(a.createdAt || 0);
+                        const dateB = new Date(b.createdAt || 0);
+                        return dateB - dateA; // En yeni önce
+                    })
+                    : [];
+            %>
+
+            <% if (boostHistory.length === 0) { %>
+                <!-- Empty State -->
+                <div class="rounded-2xl border-2 border-green-500/20 bg-gradient-to-br from-[#0d0d15]/80 to-[#0d0d15]/50 backdrop-blur-sm overflow-hidden shadow-2xl shadow-green-900/10 hover:border-green-500/40 transition-all duration-300">
+                    <div class="p-12 text-center">
+                        <div class="w-24 h-24 mx-auto mb-6 rounded-2xl empty-state-icon flex items-center justify-center" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.2) 100%); border: 2px solid rgba(16, 185, 129, 0.3);">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket text-green-400">
+                                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-2xl font-bold text-white mb-3 bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">No boost purchases found</h3>
+                        <p class="text-zinc-400 mb-8 text-lg">You haven't purchased any boost packages yet</p>
+                        <a class="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 rounded-xl text-white font-bold shadow-xl shadow-green-500/30 transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/40" href="/dashboard">
+                            <i class="fas fa-rocket"></i>
+                            <span>Go to Dashboard</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            <% } else { %>
+                <!-- Boost History Cards -->
+                <div class="space-y-4">
+                    <% boostHistory.forEach((purchase, index) => { 
+                        const packageName = purchase.packageName || 'Unknown Package';
+                        const quantity = purchase.quantity || 0;
+                        const duration = purchase.duration || 0;
+                        const price = purchase.price || 0;
+                        const previousBalance = purchase.previousBalance || 0;
+                        const newBalance = purchase.newBalance || 0;
+                        const discordInvite = purchase.discordInvite || 'N/A';
+                        const createdAt = purchase.createdAt ? new Date(purchase.createdAt) : null;
+                    %>
+                        <div class="history-card rounded-xl overflow-hidden shadow-xl">
+                            <!-- Status Indicator Bar -->
+                            <div class="status-indicator purchased"></div>
+                            
+                            <div class="p-6 pl-8 relative">
+                                <!-- Header: Package & Price -->
+                                <div class="flex items-start justify-between mb-6">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-4 mb-3">
+                                            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 flex items-center justify-center border border-green-500/30">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rocket text-green-400 icon-glow">
+                                                    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path>
+                                                    <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path>
+                                                    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path>
+                                                    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path>
+                                                </svg>
+                                            </div>
+                                            <div>
+                                                <div class="text-2xl font-bold text-white mb-1">
+                                                    <%= packageName %>
+                                                </div>
+                                                <div class="flex items-center gap-4 text-sm text-zinc-400">
+                                                    <span class="flex items-center gap-2">
+                                                        <i class="fas fa-rocket text-green-400"></i>
+                                                        <span class="font-semibold"><%= quantity %> Boosts</span>
+                                                    </span>
+                                                    <span class="flex items-center gap-2">
+                                                        <i class="fas fa-calendar-alt text-blue-400"></i>
+                                                        <span class="font-semibold"><%= duration %> month<%= duration > 1 ? 's' : '' %></span>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="px-4 py-2.5 rounded-xl border-2 bg-green-500/20 text-green-400 border-green-500/30 backdrop-blur-sm font-bold text-sm uppercase tracking-wider">
+                                        Purchased
+                                    </div>
+                                </div>
+
+                                <!-- Details Grid -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                                    <!-- Price -->
+                                    <div class="detail-box rounded-xl p-4">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="fas fa-dollar-sign text-green-400 text-sm"></i>
+                                            <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Price Paid</div>
+                                        </div>
+                                        <div class="text-2xl font-bold amount-gradient">$<%= price.toFixed(2) %></div>
+                                    </div>
+
+                                    <!-- Discord Server -->
+                                    <div class="detail-box rounded-xl p-4">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="fab fa-discord text-indigo-400 text-sm"></i>
+                                            <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Discord Server</div>
+                                        </div>
+                                        <div class="text-sm font-medium text-white break-all truncate" title="<%= discordInvite %>"><%= discordInvite %></div>
+                                    </div>
+
+                                    <!-- Previous Balance -->
+                                    <div class="detail-box rounded-xl p-4">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="fas fa-arrow-down text-red-400 text-sm"></i>
+                                            <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Previous Balance</div>
+                                        </div>
+                                        <div class="text-lg font-bold text-gray-300">$<%= previousBalance.toFixed(2) %></div>
+                                    </div>
+
+                                    <!-- New Balance -->
+                                    <div class="detail-box rounded-xl p-4">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="fas fa-arrow-up text-green-400 text-sm"></i>
+                                            <div class="text-xs font-semibold text-zinc-400 uppercase tracking-wider">New Balance</div>
+                                        </div>
+                                        <div class="text-lg font-bold text-green-400">$<%= newBalance.toFixed(2) %></div>
+                                    </div>
+                                </div>
+
+                                <!-- Date -->
+                                <% if (createdAt) { %>
+                                    <div class="flex items-center gap-2.5 text-xs pt-5 border-t border-purple-500/20">
+                                        <div class="w-8 h-8 rounded-lg bg-green-500/10 flex items-center justify-center border border-green-500/20">
+                                            <i class="fas fa-calendar-check text-green-400 text-xs"></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-[10px] uppercase tracking-wider text-zinc-500">Purchased</div>
+                                            <div class="text-sm font-semibold text-white"><%= createdAt.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) %></div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <!-- Spotlight Effect Script -->
+    <script>
+        let currentTab = 'balance';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            
+            const balanceTab = document.getElementById('tab-balance');
+            const boostTab = document.getElementById('tab-boost');
+            const balanceSection = document.getElementById('balance-history-section');
+            const boostSection = document.getElementById('boost-history-section');
+
+            if (tab === 'balance') {
+                balanceTab.classList.add('active');
+                boostTab.classList.remove('active');
+                balanceSection.classList.remove('hidden');
+                boostSection.classList.add('hidden');
+            } else {
+                boostTab.classList.add('active');
+                balanceTab.classList.remove('active');
+                boostSection.classList.remove('hidden');
+                balanceSection.classList.add('hidden');
+            }
+
+            setTimeout(() => {
+                applySpotlightEffect();
+            }, 100);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            switchTab('balance');
+        });
+
+        function applySpotlightEffect() {
+        const cards = document.querySelectorAll('.spotlight-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+        }
+
+        applySpotlightEffect();
+
+        const API_URL = '<%= apiUrl || "/api" %>';
+
+        let selectedBalanceAmount = null;
+
+        function selectBalanceAmount(amount) {
+            selectedBalanceAmount = amount;
+            
+            document.querySelectorAll('.balance-option').forEach(btn => {
+                btn.classList.remove('border-purple-500', 'bg-purple-500/20');
+                btn.classList.add('border-white/10');
+            });
+            
+            const selectedBtn = document.querySelector(`[data-amount="${amount}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('border-purple-500', 'bg-purple-500/20');
+                selectedBtn.classList.remove('border-white/10');
+            }
+            
+            document.getElementById('custom-balance-amount').value = amount.toFixed(2);
+            
+            updateAddBalanceButton();
+        }
+
+        function handleCustomAmountInput() {
+            const customInput = document.getElementById('custom-balance-amount');
+            const value = parseFloat(customInput.value);
+            
+            if (!isNaN(value) && value > 0) {
+                selectedBalanceAmount = value;
+                
+                document.querySelectorAll('.balance-option').forEach(btn => {
+                    btn.classList.remove('border-purple-500', 'bg-purple-500/20');
+                    btn.classList.add('border-white/10');
+                });
+            } else {
+                selectedBalanceAmount = null;
+            }
+            
+            updateAddBalanceButton();
+        }
+
+        function updateAddBalanceButton() {
+            const addBalanceBtn = document.getElementById('add-balance-btn');
+            const addBalanceText = document.getElementById('add-balance-text');
+            
+            if (selectedBalanceAmount && selectedBalanceAmount > 0) {
+                addBalanceBtn.disabled = false;
+                addBalanceText.textContent = `Proceed to Payment`;
+            } else {
+                addBalanceBtn.disabled = true;
+                addBalanceText.textContent = 'Select or enter amount';
+            }
+        }
+
+        async function handleAddBalance() {
+            if (!selectedBalanceAmount || selectedBalanceAmount <= 0) {
+                Swal.fire({
+                    title: 'Invalid Amount',
+                    text: 'Please select or enter a valid amount',
+                    icon: 'warning',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            const addBalanceBtn = document.getElementById('add-balance-btn');
+            const originalText = addBalanceBtn.innerHTML;
+            addBalanceBtn.disabled = true;
+            addBalanceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                
+                const response = await fetch(`${API_URL}/auth/balance/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        amount: selectedBalanceAmount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: `$${selectedBalanceAmount.toFixed(2)} has been added to your balance`,
+                        icon: 'success',
+                        background: '#030014',
+                        color: '#e5e7eb',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#10b981'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(data.message || 'Balance eklenemedi');
+                }
+            } catch (error) {
+                console.error('Error adding balance:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'An error occurred while adding balance. Please try again.',
+                    icon: 'error',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#ef4444'
+                });
+                
+                addBalanceBtn.disabled = false;
+                addBalanceBtn.innerHTML = originalText;
+            }
+        }
+
+         const userProfileBtn = document.getElementById('user-profile-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        const chevronIcon = document.getElementById('chevron-icon');
+
+        if (userProfileBtn && userDropdown) {
+            userProfileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                chevronIcon.style.transform = userDropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userProfileBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.classList.remove('show');
+                    chevronIcon.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+
+        function copyUserId(event) {
+            const userIdElement = document.getElementById('user-id-text');
+            const userId = userIdElement ? userIdElement.getAttribute('data-user-id') : null;
+            
+            if (!userId) {
+                console.error('User ID not found');
+                return;
+            }
+            
+            navigator.clipboard.writeText(userId).then(() => {
+                const btn = event.target;
+                const originalIcon = btn.className;
+                btn.className = 'fas fa-check copy-id-btn';
+                btn.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    btn.className = originalIcon;
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+                window.location.href = '/login';
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+

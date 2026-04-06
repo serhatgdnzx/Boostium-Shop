@@ -1,0 +1,8 @@
+{
+    "DISCORD_BOT_TOKEN": "",
+    "DISCORD_WEBHOOK_URL": "",
+    "NOWPAYMENTS_API_KEY": "",
+    "NOWPAYMENTS_SECRET": "",
+    "NOWPAYMENTS_TEST_MODE": false,
+    "DEBUG": true
+}

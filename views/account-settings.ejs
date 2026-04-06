@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : `Account Settings | ${typeof siteName !== 'undefined' ? siteName : 'Boostium.shop'}` %></title>
+    <meta name="description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta name="keywords" content="<%= typeof siteKeywords !== 'undefined' ? siteKeywords : 'boosts, servers, boosting, platform' %>">
+    <meta property="og:title" content="<%= typeof siteName !== 'undefined' ? siteName : 'Boostium.shop' %>">
+    <meta property="og:description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta property="og:url" content="<%= typeof siteUrl !== 'undefined' ? siteUrl : 'https://boostium.shop' %>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#030014',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                        neon: {
+                            pink: '#F472B6',
+                            blue: '#60A5FA',
+                            purple: '#A78BFA'
+                        }
+                    },
+                    backgroundImage: {
+                        'nebula': 'radial-gradient(circle at 50% -20%, #2e1065, #030014 60%)',
+                        'card-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)'
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030014;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .spotlight-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s;
+        }
+
+        .spotlight-card::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: 3;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .spotlight-card:hover::before {
+            opacity: 1;
+        }
+
+        .spotlight-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(180deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.1) 100%);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #a78bfa;
+        }
+
+        .nav-link.active {
+            color: #a78bfa;
+        }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        .package-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .package-card:hover:not(.disabled) {
+            transform: scale(1.02);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .package-card.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .package-card.selected {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .out-of-stock-banner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 20;
+            pointer-events: none;
+        }
+        
+        .out-of-stock-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 40px;
+            background: #dc2626;
+            transform: rotate(45deg);
+            transform-origin: top right;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            margin-top: 15px;
+            margin-right: -35px;
+        }
+        
+        .out-of-stock-banner::after {
+            content: 'OUT OF STOCK';
+            position: absolute;
+            top: 22px;
+            right: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            transform: rotate(45deg);
+            transform-origin: center;
+            text-transform: uppercase;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            z-index: 21;
+        }
+
+        .user-profile-card {
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-profile-card:hover {
+            border-color: rgba(167, 139, 250, 0.5) !important;
+        }
+
+        .user-profile-card:hover #user-profile-btn {
+            box-shadow: 
+                0 0 15px rgba(167, 139, 250, 0.6),
+                0 0 30px rgba(167, 139, 250, 0.4),
+                0 0 45px rgba(244, 114, 182, 0.3),
+                0 0 60px rgba(244, 114, 182, 0.2);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(15, 10, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 16px;
+            width: 280px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(167, 139, 250, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .status-badge {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .user-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .user-name {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-id-btn {
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 12px;
+        }
+
+        .copy-id-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .balance-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .balance-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .balance-value {
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .user-dropdown-menu {
+            padding: 8px;
+        }
+
+        .user-dropdown-item {
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        .user-dropdown-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(244, 114, 182, 0.15);
+            color: #f472b6;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .advertisement-banner {
+            max-height: 200px;
+            width: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .advertisement-banner:hover {
+            transform: scale(1.02);
+        }
+
+        .advertisement-link {
+            display: block;
+            text-decoration: none;
+        }
+
+        .advertisement-link:hover {
+            text-decoration: none;
+        }
+
+        .leaderboard-rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .leaderboard-rank-badge.rank-1 {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-2 {
+            background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+            color: #1f2937;
+        }
+
+        .leaderboard-rank-badge.rank-3 {
+            background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-other {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-row {
+            transition: background-color 0.2s;
+        }
+
+        .leaderboard-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank-badge-prestige {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+
+        .rank-badge-gold {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+
+        /* SweetAlert2 Custom Styling */
+        .swal2-popup {
+            position: relative;
+            background: rgba(255, 255, 255, 0.01) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 1.5rem !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(139, 92, 246, 0.2) !important;
+            padding: 2rem !important;
+            overflow: hidden !important;
+            transition: border-color 0.3s !important;
+        }
+
+        .swal2-popup::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(
+                800px circle at var(--swal2-mouse-x, 50%) var(--swal2-mouse-y, 50%),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .swal2-popup:hover::before {
+            opacity: 1;
+        }
+
+        .swal2-popup:hover {
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .swal2-title {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 1.75rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .swal2-html-container {
+            color: #e5e7eb !important;
+            font-size: 1rem !important;
+            line-height: 1.6 !important;
+        }
+
+        .swal2-confirm {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+            color: #ffffff !important;
+            border-radius: 0.75rem !important;
+            padding: 0.75rem 2rem !important;
+            font-weight: 600 !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .swal2-confirm:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4) !important;
+        }
+
+        .swal2-backdrop-show {
+            background: rgba(0, 0, 0, 0.8) !important;
+            backdrop-filter: blur(4px) !important;
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-500 selection:text-white min-h-screen">
+
+    <!-- Background Elements -->
+    <div class="fixed top-0 left-0 w-full h-full bg-nebula -z-20"></div>
+
+     <!-- Navigation -->
+     <div class="fixed w-full z-50 top-4 flex justify-center px-4">
+        <nav class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4 flex items-center justify-between gap-6 shadow-2xl shadow-indigo-500/10 w-full max-w-6xl">
+            <!-- Left: Logo + Links -->
+            <div class="flex items-center gap-10">
+                <a href="/" class="font-bold text-xl tracking-tight flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-indigo-500"></span>
+                    Boostium
+                </a>
+                <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+                    
+                </div>
+            </div>
+
+            <!-- Right: User Profile Summary -->
+            <div class="hidden sm:flex items-center">
+                <div class="user-profile-card relative">
+                    <div id="user-profile-btn" class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-2xl px-3 py-2 shadow-lg shadow-black/40">
+                        <!-- Avatar with initials -->
+                        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold">
+                            <%
+                                let initials = 'US';
+                                if (typeof userStats !== 'undefined' && userStats) {
+                                    if (userStats.name && userStats.name.trim().length > 0) {
+                                        const parts = userStats.name.trim().split(' ');
+                                        initials = (parts[0][0] || '') + (parts[1] ? parts[1][0] : '');
+                                        initials = initials.toUpperCase();
+                                    } else if (userStats.email) {
+                                        initials = userStats.email[0].toUpperCase();
+                                    }
+                                }
+                            %>
+                            <span><%= initials %></span>
+                        </div>
+                        <!-- Name + Balance -->
+                        <div class="flex flex-col leading-tight">
+                            <span class="text-[12px] font-semibold text-gray-100 max-w-[100px] truncate">
+                                <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                            </span>
+                            <a href="/add-balance" class="text-[11px] font-semibold text-purple-300 hover:text-purple-200 transition-colors cursor-pointer">
+                                <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                    $<%= userStats.UserBalance.toFixed(2) %>
+                                <% } else { %>
+                                    $0.00
+                                <% } %>
+                            </a>
+                        </div>
+                        <i class="fas fa-chevron-down text-[9px] text-gray-400 transition-transform duration-200" id="chevron-icon"></i>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown" class="user-dropdown">
+                        <!-- Header Section -->
+                        <div class="user-dropdown-header">
+                            <!-- Status + User Info -->
+                            <div class="user-status-row">
+                                <span class="status-badge">
+                                    <%
+                                        let badgeInitials = 'US';
+                                        if (typeof userStats !== 'undefined' && userStats) {
+                                            if (userStats.name && userStats.name.trim().length > 0) {
+                                                const nameParts = userStats.name.trim().split(' ');
+                                                if (nameParts.length > 1) {
+                                                    badgeInitials = (nameParts[0][0] || '') + (nameParts[1][0] || '');
+                                                } else {
+                                                    badgeInitials = nameParts[0].substring(0, 2);
+                                                    if (badgeInitials.length < 2) {
+                                                        badgeInitials = badgeInitials + badgeInitials;
+                                                    }
+                                                }
+                                                badgeInitials = badgeInitials.toUpperCase();
+                                            } else if (userStats.email) {
+                                                badgeInitials = userStats.email.substring(0, 2).toUpperCase();
+                                            }
+                                        }
+                                    %>
+                                    <%= badgeInitials %>
+                                </span>
+                                <div class="user-info-row">
+                                    <span class="user-name">
+                                        <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- User ID -->
+                            <div class="user-info-row" style="margin-bottom: 12px;">
+                                <span class="user-id" id="user-id-text" data-user-id="<%= (typeof userStats !== 'undefined' && userStats && userStats._id) ? userStats._id.toString() : '' %>">
+                                    <% if (typeof userStats !== 'undefined' && userStats && userStats._id) { %>
+                                        <%= userStats._id.toString().substring(0, 10) %>...
+                                    <% } else { %>
+                                        N/A
+                                    <% } %>
+                                </span>
+                                <i class="fas fa-clipboard copy-id-btn" onclick="copyUserId(event)" title="Copy User ID"></i>
+                            </div>
+                            <!-- Balance -->
+                            <div class="balance-row">
+                                <div class="balance-label">
+                                    <i class="fas fa-wallet"></i>
+                                    <span>Balance:</span>
+                                </div>
+                                <a href="/add-balance" class="balance-value hover:text-purple-300 transition-colors cursor-pointer">
+                                    <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                        $<%= userStats.UserBalance.toFixed(2) %>
+                                    <% } else { %>
+                                        $0.00
+                                    <% } %>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Menu Items -->
+                        <div class="user-dropdown-menu">
+                            <div class="user-dropdown-item" onclick="window.location.href='/account-settings'">
+                                <i class="fas fa-cog"></i>
+                                <span>Account Settings</span>
+                            </div>
+                            <div class="user-dropdown-item" onclick="window.location.href='/order-history'">
+                                <i class="fas fa-history"></i>
+                                <span>Order History</span>
+                            </div>
+                            <div class="user-dropdown-item logout" onclick="handleLogout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-32 pb-10">
+        <!-- Header -->
+        <div class="mb-8 text-center">
+            <h1 class="text-4xl font-bold mb-2">Account Settings</h1>
+            <p class="text-gray-400">Manage your account preferences and security</p>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="grid lg:grid-cols-3 gap-6 lg:gap-8">
+            <!-- Left Column - Forms (2/3 width) -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Profile Information Card -->
+                <div class="spotlight-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 sm:p-8 hover:border-purple-500/30 transition-all duration-300 shadow-lg shadow-purple-900/5">
+                    <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                        <i class="fas fa-user text-purple-400"></i>
+                        Profile Information
+                    </h2>
+                    <form id="profile-form" onsubmit="handleProfileUpdate(event)">
+                        <div class="space-y-5">
+                            <div>
+                                <label for="username" class="block text-sm font-medium text-zinc-400 mb-2">Username</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-user h-5 w-5 text-zinc-500"></i>
+                                    </div>
+                                    <input 
+                                        id="username" 
+                                        name="username"
+                                        class="w-full bg-zinc-900/50 border border-zinc-700/50 focus:border-purple-500/50 rounded-lg pl-12 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200" 
+                                        required 
+                                        type="text" 
+                                        value="<%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : '' %>"
+                                    >
+                                </div>
+                                <div id="username-error" class="mt-1 text-xs text-red-400 hidden"></div>
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-zinc-400 mb-2">Email Address</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-envelope h-5 w-5 text-zinc-500"></i>
+                                    </div>
+                                    <input 
+                                        id="email" 
+                                        name="email"
+                                        class="w-full bg-zinc-900/50 border border-zinc-700/50 focus:border-purple-500/50 rounded-lg pl-12 pr-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200" 
+                                        required 
+                                        type="email" 
+                                        value="<%= (typeof userStats !== 'undefined' && userStats && userStats.email) ? userStats.email : '' %>"
+                                    >
+                                </div>
+                                <div id="email-error" class="mt-1 text-xs text-red-400 hidden"></div>
+                            </div>
+                            <div class="flex justify-end pt-2">
+                                <button 
+                                    type="submit" 
+                                    id="profile-submit-btn"
+                                    class="px-6 py-3 rounded-lg text-white font-semibold shadow-lg transition-all duration-200 flex items-center gap-2 bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600 shadow-purple-500/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    <i class="fas fa-save"></i>
+                                    <span id="profile-submit-text">Save Changes</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Change Password Card -->
+                <div class="spotlight-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 sm:p-8 hover:border-purple-500/30 transition-all duration-300 shadow-lg shadow-purple-900/5">
+                    <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-purple-400"></i>
+                        Change Password
+                    </h2>
+                    <form id="password-form" onsubmit="handlePasswordChange(event)">
+                        <div class="space-y-5">
+                            <div>
+                                <label for="currentPassword" class="block text-sm font-medium text-zinc-400 mb-2">Current Password</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-lock h-5 w-5 text-zinc-500"></i>
+                                    </div>
+                                    <input 
+                                        id="currentPassword" 
+                                        name="currentPassword"
+                                        class="w-full bg-zinc-900/50 border border-zinc-700/50 focus:border-purple-500/50 rounded-lg pl-12 pr-12 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200" 
+                                        required 
+                                        type="password" 
+                                        placeholder="Enter current password"
+                                    >
+                                    <button type="button" onclick="togglePasswordVisibility('currentPassword', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-zinc-400 transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="current-password-error" class="mt-1 text-xs text-red-400 hidden"></div>
+                            </div>
+                            <div>
+                                <label for="newPassword" class="block text-sm font-medium text-zinc-400 mb-2">New Password</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-lock h-5 w-5 text-zinc-500"></i>
+                                    </div>
+                                    <input 
+                                        id="newPassword" 
+                                        name="newPassword"
+                                        class="w-full bg-zinc-900/50 border border-zinc-700/50 focus:border-purple-500/50 rounded-lg pl-12 pr-12 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200" 
+                                        required 
+                                        type="password" 
+                                        placeholder="Enter new password (min 6 characters)"
+                                        minlength="6"
+                                    >
+                                    <button type="button" onclick="togglePasswordVisibility('newPassword', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-zinc-400 transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="new-password-error" class="mt-1 text-xs text-red-400 hidden"></div>
+                            </div>
+                            <div>
+                                <label for="confirmPassword" class="block text-sm font-medium text-zinc-400 mb-2">Confirm New Password</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i class="fas fa-lock h-5 w-5 text-zinc-500"></i>
+                                    </div>
+                                    <input 
+                                        id="confirmPassword" 
+                                        name="confirmPassword"
+                                        class="w-full bg-zinc-900/50 border border-zinc-700/50 focus:border-purple-500/50 rounded-lg pl-12 pr-12 py-3 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-purple-500/20 transition-all duration-200" 
+                                        required 
+                                        type="password" 
+                                        placeholder="Confirm new password"
+                                    >
+                                    <button type="button" onclick="togglePasswordVisibility('confirmPassword', this)" class="absolute inset-y-0 right-0 pr-4 flex items-center text-zinc-500 hover:text-zinc-400 transition-colors">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div id="confirm-password-error" class="mt-1 text-xs text-red-400 hidden"></div>
+                            </div>
+                            <div class="flex justify-end pt-2">
+                                <button 
+                                    type="submit" 
+                                    id="password-submit-btn"
+                                    class="px-6 py-3 rounded-lg text-white font-semibold shadow-lg transition-all duration-200 flex items-center gap-2 bg-gradient-to-r from-purple-500 to-fuchsia-500 hover:from-purple-600 hover:to-fuchsia-600 shadow-purple-500/20 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                                >
+                                    <i class="fas fa-save"></i>
+                                    <span id="password-submit-text">Update Password</span>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right Column - Account Info (1/3 width) -->
+            <div class="lg:col-span-1">
+                <div class="spotlight-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 sm:p-8 hover:border-purple-500/30 transition-all duration-300 shadow-lg shadow-purple-900/5 sticky top-28">
+                    <h2 class="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                        <i class="fas fa-user-circle text-purple-400"></i>
+                        Account Information
+                    </h2>
+                    <div class="space-y-4">
+                        <!-- Username -->
+                        <div class="p-4 rounded-xl border border-white/10 bg-white/5 hover:border-purple-500/20 transition-all duration-300">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2.5 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-500/10 text-purple-400 border border-purple-500/20">
+                                    <i class="fas fa-user w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-xs text-zinc-400 mb-1">Username</div>
+                                    <div class="font-semibold text-white text-sm">
+                                        <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'N/A' %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="p-4 rounded-xl border border-white/10 bg-white/5 hover:border-purple-500/20 transition-all duration-300">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2.5 rounded-lg bg-gradient-to-br from-purple-500/20 to-purple-500/10 text-purple-400 border border-purple-500/20">
+                                    <i class="fas fa-envelope w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-xs text-zinc-400 mb-1">Email Address</div>
+                                    <div class="font-semibold text-white text-sm truncate">
+                                        <%= (typeof userStats !== 'undefined' && userStats && userStats.email) ? userStats.email : 'N/A' %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Balance -->
+                        <div class="p-4 rounded-xl border border-white/10 bg-white/5 hover:border-green-500/20 transition-all duration-300">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="p-2.5 rounded-lg bg-gradient-to-br from-green-500/20 to-green-500/10 text-green-400 border border-green-500/20">
+                                        <i class="fas fa-wallet w-4 h-4"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-zinc-400 mb-1">Account Balance</div>
+                                        <div class="font-semibold text-white text-sm">
+                                            <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                                $<%= userStats.UserBalance.toFixed(2) %>
+                                            <% } else { %>
+                                                $0.00
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                </div>
+                                <a href="/add-balance" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg shadow-green-500/20 transition-all duration-200 whitespace-nowrap">
+                                    Top Up
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Member Since -->
+                        <div class="p-4 rounded-xl border border-white/10 bg-white/5 hover:border-blue-500/20 transition-all duration-300">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-500/10 text-blue-400 border border-blue-500/20">
+                                    <i class="fas fa-calendar-alt w-4 h-4"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="text-xs text-zinc-400 mb-1">Member Since</div>
+                                    <div class="font-semibold text-white text-sm">
+                                        <% if (typeof userStats !== 'undefined' && userStats && userStats.createdAt) { %>
+                                            <%= new Date(userStats.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+                                        <% } else { %>
+                                            N/A
+                                        <% } %>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Warning -->
+                    <div class="mt-6 p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <div class="flex items-start gap-3">
+                            <i class="fas fa-exclamation-circle w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"></i>
+                            <div class="text-sm text-blue-300">
+                                <p class="font-semibold mb-1">Account Security</p>
+                                <p class="text-xs text-blue-400/80">We recommend using a strong, unique password and updating it regularly to keep your account secure.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Return to Dashboard -->
+                    <div class="mt-6">
+                        <a href="/dashboard" class="w-full px-4 py-3 rounded-lg flex items-center justify-center gap-2 bg-zinc-800/50 hover:bg-zinc-700/50 border border-white/10 text-white font-medium transition-all duration-200">
+                            <i class="fas fa-arrow-left"></i>
+                            Return to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Spotlight Effect Script -->
+    <script>
+        const cards = document.querySelectorAll('.spotlight-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        const API_URL = '<%= apiUrl || "/api" %>';
+
+        let selectedBalanceAmount = null;
+
+        function selectBalanceAmount(amount) {
+            selectedBalanceAmount = amount;
+            
+            document.querySelectorAll('.balance-option').forEach(btn => {
+                btn.classList.remove('border-purple-500', 'bg-purple-500/20');
+                btn.classList.add('border-white/10');
+            });
+            
+            const selectedBtn = document.querySelector(`[data-amount="${amount}"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('border-purple-500', 'bg-purple-500/20');
+                selectedBtn.classList.remove('border-white/10');
+            }
+            
+            document.getElementById('custom-balance-amount').value = amount.toFixed(2);
+            
+            updateAddBalanceButton();
+        }
+
+        function handleCustomAmountInput() {
+            const customInput = document.getElementById('custom-balance-amount');
+            const value = parseFloat(customInput.value);
+            
+            if (!isNaN(value) && value > 0) {
+                selectedBalanceAmount = value;
+                
+                document.querySelectorAll('.balance-option').forEach(btn => {
+                    btn.classList.remove('border-purple-500', 'bg-purple-500/20');
+                    btn.classList.add('border-white/10');
+                });
+            } else {
+                selectedBalanceAmount = null;
+            }
+            
+            updateAddBalanceButton();
+        }
+
+        function updateAddBalanceButton() {
+            const addBalanceBtn = document.getElementById('add-balance-btn');
+            const addBalanceText = document.getElementById('add-balance-text');
+            
+            if (selectedBalanceAmount && selectedBalanceAmount > 0) {
+                addBalanceBtn.disabled = false;
+                addBalanceText.textContent = `Proceed to Payment`;
+            } else {
+                addBalanceBtn.disabled = true;
+                addBalanceText.textContent = 'Select or enter amount';
+            }
+        }
+
+        async function handleAddBalance() {
+            if (!selectedBalanceAmount || selectedBalanceAmount <= 0) {
+                Swal.fire({
+                    title: 'Invalid Amount',
+                    text: 'Please select or enter a valid amount',
+                    icon: 'warning',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#4f46e5'
+                });
+                return;
+            }
+
+            const addBalanceBtn = document.getElementById('add-balance-btn');
+            const originalText = addBalanceBtn.innerHTML;
+            addBalanceBtn.disabled = true;
+            addBalanceBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                
+                const response = await fetch(`${API_URL}/auth/balance/add`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        amount: selectedBalanceAmount
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: `$${selectedBalanceAmount.toFixed(2)} has been added to your balance`,
+                        icon: 'success',
+                        background: '#030014',
+                        color: '#e5e7eb',
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#10b981'
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    throw new Error(data.message || 'Balance eklenemedi');
+                }
+            } catch (error) {
+                console.error('Error adding balance:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.message || 'An error occurred while adding balance. Please try again.',
+                    icon: 'error',
+                    background: '#030014',
+                    color: '#e5e7eb',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#ef4444'
+                });
+                
+                addBalanceBtn.disabled = false;
+                addBalanceBtn.innerHTML = originalText;
+            }
+        }
+
+         const userProfileBtn = document.getElementById('user-profile-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        const chevronIcon = document.getElementById('chevron-icon');
+
+        if (userProfileBtn && userDropdown) {
+            userProfileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                chevronIcon.style.transform = userDropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userProfileBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.classList.remove('show');
+                    chevronIcon.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+
+        function copyUserId(event) {
+            const userIdElement = document.getElementById('user-id-text');
+            const userId = userIdElement ? userIdElement.getAttribute('data-user-id') : null;
+            
+            if (!userId) {
+                console.error('User ID not found');
+                return;
+            }
+            
+            navigator.clipboard.writeText(userId).then(() => {
+                const btn = event.target;
+                const originalIcon = btn.className;
+                btn.className = 'fas fa-check copy-id-btn';
+                btn.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    btn.className = originalIcon;
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+                window.location.href = '/login';
+            }
+        }
+
+        function togglePasswordVisibility(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        async function handleProfileUpdate(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.getElementById('profile-submit-btn');
+            const submitText = document.getElementById('profile-submit-text');
+            const usernameError = document.getElementById('username-error');
+            const emailError = document.getElementById('email-error');
+            
+            usernameError.classList.add('hidden');
+            emailError.classList.add('hidden');
+            
+            const username = document.getElementById('username').value.trim();
+            const email = document.getElementById('email').value.trim();
+            
+            if (!username || !email) {
+                Swal.fire({
+                    title: 'Validation Error',
+                    text: 'Please fill in all fields',
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Saving...';
+            
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                
+                const response = await fetch(`${API_URL}/auth/profile/update`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: username,
+                        email: email
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `
+                            <div class="text-left space-y-3 mt-4">
+                                <div class="flex items-center justify-center mb-4">
+                                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                                        <i class="fas fa-check text-white text-2xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-center text-green-400">${data.message}</p>
+                            </div>
+                        `,
+                        icon: 'success',
+                        iconColor: '#10b981',
+                        confirmButtonText: '<i class="fas fa-check mr-2"></i> OK',
+                        customClass: {
+                            popup: 'swal2-popup-custom',
+                            title: 'swal2-title-custom',
+                            htmlContainer: 'swal2-html-container-custom',
+                            confirmButton: 'swal2-confirm-custom'
+                        },
+                        didOpen: () => {
+                            const popup = document.querySelector('.swal2-popup');
+                            if (popup) {
+                                popup.addEventListener('mousemove', (e) => {
+                                    const rect = popup.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                    popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                                });
+                            }
+                        }
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    if (data.message.includes('username') || data.message.includes('Username')) {
+                        usernameError.textContent = data.message;
+                        usernameError.classList.remove('hidden');
+                    } else if (data.message.includes('email') || data.message.includes('Email')) {
+                        emailError.textContent = data.message;
+                        emailError.classList.remove('hidden');
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            html: `
+                                <div class="text-left space-y-3 mt-4">
+                                    <p class="text-center text-red-400">${data.message}</p>
+                                </div>
+                            `,
+                            icon: 'error',
+                            iconColor: '#ef4444',
+                            confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                            customClass: {
+                                popup: 'swal2-popup-custom',
+                                title: 'swal2-title-custom',
+                                htmlContainer: 'swal2-html-container-custom',
+                                confirmButton: 'swal2-confirm-custom'
+                            },
+                            didOpen: () => {
+                                const popup = document.querySelector('.swal2-popup');
+                                if (popup) {
+                                    popup.addEventListener('mousemove', (e) => {
+                                        const rect = popup.getBoundingClientRect();
+                                        const x = e.clientX - rect.left;
+                                        const y = e.clientY - rect.top;
+                                        popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                        popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Profile update error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    html: `
+                        <div class="text-left space-y-3 mt-4">
+                            <p class="text-center text-red-400">An error occurred. Please try again.</p>
+                        </div>
+                    `,
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+            } finally {
+                submitBtn.disabled = false;
+                submitText.textContent = 'Save Changes';
+            }
+        }
+
+        async function handlePasswordChange(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.getElementById('password-submit-btn');
+            const submitText = document.getElementById('password-submit-text');
+            const currentPasswordError = document.getElementById('current-password-error');
+            const newPasswordError = document.getElementById('new-password-error');
+            const confirmPasswordError = document.getElementById('confirm-password-error');
+            
+            currentPasswordError.classList.add('hidden');
+            newPasswordError.classList.add('hidden');
+            confirmPasswordError.classList.add('hidden');
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                Swal.fire({
+                    title: 'Validation Error',
+                    text: 'Please fill in all password fields',
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                newPasswordError.textContent = 'Password must be at least 6 characters long';
+                newPasswordError.classList.remove('hidden');
+                return;
+            }
+            
+            if (newPassword !== confirmPassword) {
+                confirmPasswordError.textContent = 'Passwords do not match';
+                confirmPasswordError.classList.remove('hidden');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Updating...';
+            
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                
+                const response = await fetch(`${API_URL}/auth/password/change`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        currentPassword: currentPassword,
+                        newPassword: newPassword,
+                        confirmPassword: confirmPassword
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        html: `
+                            <div class="text-left space-y-3 mt-4">
+                                <div class="flex items-center justify-center mb-4">
+                                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                                        <i class="fas fa-check text-white text-2xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-center text-green-400">${data.message}</p>
+                            </div>
+                        `,
+                        icon: 'success',
+                        iconColor: '#10b981',
+                        confirmButtonText: '<i class="fas fa-check mr-2"></i> OK',
+                        customClass: {
+                            popup: 'swal2-popup-custom',
+                            title: 'swal2-title-custom',
+                            htmlContainer: 'swal2-html-container-custom',
+                            confirmButton: 'swal2-confirm-custom'
+                        },
+                        didOpen: () => {
+                            const popup = document.querySelector('.swal2-popup');
+                            if (popup) {
+                                popup.addEventListener('mousemove', (e) => {
+                                    const rect = popup.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                    popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                                });
+                            }
+                        }
+                    }).then(() => {
+                        document.getElementById('currentPassword').value = '';
+                        document.getElementById('newPassword').value = '';
+                        document.getElementById('confirmPassword').value = '';
+                    });
+                } else {
+                    if (data.message.includes('Current password') || data.message.includes('incorrect')) {
+                        currentPasswordError.textContent = data.message;
+                        currentPasswordError.classList.remove('hidden');
+                    } else if (data.message.includes('New password') || data.message.includes('password must') || data.message.includes('different')) {
+                        newPasswordError.textContent = data.message;
+                        newPasswordError.classList.remove('hidden');
+                    } else if (data.message.includes('match')) {
+                        confirmPasswordError.textContent = data.message;
+                        confirmPasswordError.classList.remove('hidden');
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            html: `
+                                <div class="text-left space-y-3 mt-4">
+                                    <p class="text-center text-red-400">${data.message}</p>
+                                </div>
+                            `,
+                            icon: 'error',
+                            iconColor: '#ef4444',
+                            confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                            customClass: {
+                                popup: 'swal2-popup-custom',
+                                title: 'swal2-title-custom',
+                                htmlContainer: 'swal2-html-container-custom',
+                                confirmButton: 'swal2-confirm-custom'
+                            },
+                            didOpen: () => {
+                                const popup = document.querySelector('.swal2-popup');
+                                if (popup) {
+                                    popup.addEventListener('mousemove', (e) => {
+                                        const rect = popup.getBoundingClientRect();
+                                        const x = e.clientX - rect.left;
+                                        const y = e.clientY - rect.top;
+                                        popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                        popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Password change error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    html: `
+                        <div class="text-left space-y-3 mt-4">
+                            <p class="text-center text-red-400">An error occurred. Please try again.</p>
+                        </div>
+                    `,
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+            } finally {
+                submitBtn.disabled = false;
+                submitText.textContent = 'Update Password';
+            }
+        }
+
+    </script>
+
+</body>
+</html>
+

@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : `Login | ${typeof siteName !== 'undefined' ? siteName : 'Boostium.shop'}` %></title>
+    <meta name="description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta name="keywords" content="<%= typeof siteKeywords !== 'undefined' ? siteKeywords : 'boosts, servers, boosting, platform' %>">
+    <meta property="og:title" content="<%= typeof siteName !== 'undefined' ? siteName : 'Boostium.shop' %>">
+    <meta property="og:description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta property="og:url" content="<%= typeof siteUrl !== 'undefined' ? siteUrl : 'https://boostium.shop' %>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#030014',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                        neon: {
+                            pink: '#F472B6',
+                            blue: '#60A5FA',
+                            purple: '#A78BFA'
+                        }
+                    },
+                    backgroundImage: {
+                        'nebula': 'radial-gradient(circle at 50% -20%, #2e1065, #030014 60%)',
+                        'card-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)'
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030014;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .spotlight-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s;
+        }
+
+        .spotlight-card::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: 3;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .spotlight-card:hover::before {
+            opacity: 1;
+        }
+
+        .spotlight-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(180deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.1) 100%);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .form-input {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(99, 102, 241, 0.5);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        .loading {
+            display: none;
+        }
+
+        .loading.active {
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-500 selection:text-white">
+
+    <!-- Background Elements -->
+    <div class="fixed top-0 left-0 w-full h-full bg-nebula -z-20"></div>
+    <div class="fixed top-[-10%] left-[20%] ambient-glow animate-blob -z-10"></div>
+    <div class="fixed bottom-[-10%] right-[10%] ambient-glow animate-blob animation-delay-2000 bg-blue-900/20 -z-10" style="width: 800px; height: 800px; filter: blur(120px);"></div>
+
+    <!-- Navigation -->
+    <div class="fixed w-full z-50 top-6 flex justify-center px-4">
+        <nav class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-6 py-3 flex items-center justify-between gap-12 shadow-2xl shadow-indigo-500/10">
+            <a href="/" class="font-bold text-xl tracking-tight flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-indigo-500"></span>
+                Boostium
+            </a>
+            <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+                <a href="/#features" class="hover:text-white transition-colors">Features</a>
+                <a href="/#reviews" class="hover:text-white transition-colors">Reviews</a>
+                <a href="/#tos" class="hover:text-white transition-colors">Tos</a>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Login Section -->
+    <section class="min-h-screen flex items-center justify-center px-4 pt-20 pb-20">
+        <div class="w-full max-w-md relative">
+            <!-- Login Card -->
+            <div class="spotlight-card rounded-3xl p-8 md:p-10 backdrop-blur-md shadow-2xl" id="login-card">
+                <!-- Logo/Header -->
+                <div class="text-center mb-8">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 mb-4 animate-float">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl font-bold mb-2">Welcome Back</h1>
+                    <p class="text-gray-400 text-sm">Login to access your dashboard</p>
+                </div>
+
+                <!-- Tabs -->
+                <div class="flex gap-2 mb-8 bg-white/5 rounded-xl p-1">
+                    <button 
+                        onclick="switchMode('login')" 
+                        id="login-tab"
+                        class="flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all bg-indigo-600 text-white"
+                    >
+                        Login
+                    </button>
+                    <button 
+                        onclick="switchMode('register')" 
+                        id="register-tab"
+                        class="flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-all text-gray-400 hover:text-white"
+                    >
+                        Register
+                    </button>
+                </div>
+
+                <!-- Error/Success Messages -->
+                <div id="message" class="mb-6 hidden"></div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                        <input 
+                            type="email" 
+                            id="login-email"
+                            required
+                            class="w-full px-4 py-3 rounded-xl form-input text-white placeholder-gray-500"
+                            placeholder="youremail@example.com"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            id="login-password"
+                            required
+                            class="w-full px-4 py-3 rounded-xl form-input text-white placeholder-gray-500"
+                            placeholder="••••••••"
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        class="group relative w-full px-8 py-4 bg-indigo-600 rounded-xl text-white font-semibold overflow-hidden transition-all hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.5)]"
+                    >
+                        <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <span class="relative z-10 flex items-center justify-center gap-2">
+                            <span class="loading spinner">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                            <span class="loading-text">Login</span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="space-y-5 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Username</label>
+                        <input 
+                            type="text" 
+                            id="register-name"
+                            required
+                            class="w-full px-4 py-3 rounded-xl form-input text-white placeholder-gray-500"
+                            placeholder="Enter your username"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="register-email"
+                            required
+                            class="w-full px-4 py-3 rounded-xl form-input text-white placeholder-gray-500"
+                            placeholder="Enter your email"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                        <input 
+                            type="password" 
+                            id="register-password"
+                            required
+                            minlength="6"
+                            class="w-full px-4 py-3 rounded-xl form-input text-white placeholder-gray-500"
+                            placeholder="Enter your password"
+                        />
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="register-confirm-password"
+                            required
+                            class="w-full px-4 py-3 rounded-xl form-input text-white placeholder-gray-500"
+                            placeholder="Confirm your password"
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        class="group relative w-full px-8 py-4 bg-indigo-600 rounded-xl text-white font-semibold overflow-hidden transition-all hover:scale-[1.02] hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.5)]"
+                    >
+                        <div class="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]"></div>
+                        <span class="relative z-10 flex items-center justify-center gap-2">
+                            <span class="loading spinner">
+                                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </span>
+                            <span class="loading-text">Create Account</span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Decorative Elements -->
+                <div class="mt-8 pt-8 border-t border-white/5">
+                    <div class="flex gap-2 justify-center">
+                        <span class="h-1 w-12 bg-indigo-500/50 rounded-full animate-[pulse_1s_infinite]"></span>
+                        <span class="h-1 w-12 bg-purple-500/50 rounded-full animate-[pulse_1s_infinite_0.2s]"></span>
+                        <span class="h-1 w-12 bg-pink-500/50 rounded-full animate-[pulse_1s_infinite_0.4s]"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Spotlight Logic Script -->
+    <script>
+        const loginCard = document.getElementById('login-card');
+        let currentMode = 'login';
+
+        if (loginCard) {
+            loginCard.onmousemove = e => {
+                const rect = loginCard.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                loginCard.style.setProperty('--mouse-x', `${x}px`);
+                loginCard.style.setProperty('--mouse-y', `${y}px`);
+            };
+        }
+
+        function switchMode(mode) {
+            currentMode = mode;
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const loginTab = document.getElementById('login-tab');
+            const registerTab = document.getElementById('register-tab');
+
+            if (mode === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginTab.classList.add('bg-indigo-600', 'text-white');
+                loginTab.classList.remove('text-gray-400');
+                registerTab.classList.remove('bg-indigo-600', 'text-white');
+                registerTab.classList.add('text-gray-400');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                registerTab.classList.add('bg-indigo-600', 'text-white');
+                registerTab.classList.remove('text-gray-400');
+                loginTab.classList.remove('bg-indigo-600', 'text-white');
+                loginTab.classList.add('text-gray-400');
+            }
+            hideMessage();
+        }
+
+        function showMessage(text, type = 'error') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = `mb-6 p-4 rounded-xl text-sm font-medium ${
+                type === 'error' 
+                    ? 'bg-red-500/20 border border-red-500/30 text-red-300' 
+                    : 'bg-green-500/20 border border-green-500/30 text-green-300'
+            }`;
+            messageDiv.textContent = text;
+            messageDiv.classList.remove('hidden');
+        }
+
+        function hideMessage() {
+            document.getElementById('message').classList.add('hidden');
+        }
+
+        function setLoading(button, isLoading) {
+            const spinner = button.querySelector('.spinner');
+            const loadingText = button.querySelector('.loading-text');
+            if (isLoading) {
+                spinner.classList.add('active');
+                loadingText.textContent = 'İşleniyor...';
+                button.disabled = true;
+            } else {
+                spinner.classList.remove('active');
+                loadingText.textContent = button.closest('form').id === 'login-form' ? 'Login' : 'Register';
+                button.disabled = false;
+            }
+        }
+
+        const API_URL = '<%= apiUrl || "/api" %>';
+
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            setLoading(button, true);
+            hideMessage();
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    const maxAge = 7 * 24 * 60 * 60; // 7 gün
+                    document.cookie = `token=${data.token}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
+
+                    showMessage('Login successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard';
+                    }, 1500);
+                } else {
+                    if (response.status === 403 || data.banned) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Account Banned',
+                            html: `
+                                <div class="text-left">
+                                    <p class="mb-3">Your account has been banned.</p>
+                                    <p class="text-sm text-gray-400"><strong>Reason:</strong> ${data.banReason || data.message || 'No reason provided'}</p>
+                                </div>
+                            `,
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#d33',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        }).then(() => {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('user');
+                            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        });
+                    } else {
+                        showMessage(data.message || 'Login failed. Please try again.');
+                    }
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again later.');
+            } finally {
+                setLoading(button, false);
+            }
+        });
+
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const button = e.target.querySelector('button[type="submit"]');
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match!');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters!');
+                return;
+            }
+
+            setLoading(button, true);
+            hideMessage();
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ name, email, password }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Registration successful! You can now login.', 'success');
+                    setTimeout(() => {
+                        switchMode('login');
+                        document.getElementById('login-email').value = email;
+                    }, 2000);
+                } else {
+                    showMessage(data.message || 'Registration failed. Please try again.');
+                }
+            } catch (error) {
+                showMessage('Connection error. Please try again later.');
+            } finally {
+                setLoading(button, false);
+            }
+        });
+        document.addEventListener('DOMContentLoaded', () => {
+            <% if (typeof banned !== 'undefined' && banned) { %>
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Account Banned',
+                    html: `
+                        <div class="text-left">
+                            <p class="mb-3">Your account has been banned.</p>
+                            <p class="text-sm text-gray-400"><strong>Reason:</strong> <%= banReason %></p>
+                        </div>
+                    `,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#d33',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then(() => {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                });
+            <% } %>
+        });
+    </script>
+</body>
+</html>
+

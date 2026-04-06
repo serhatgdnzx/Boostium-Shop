@@ -1,0 +1,2517 @@
+<!DOCTYPE html>
+<html lang="tr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title || `${typeof siteName !== 'undefined' ? siteName : 'Boostium.shop'}` %></title>
+    <meta name="description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta name="keywords" content="<%= typeof siteKeywords !== 'undefined' ? siteKeywords : 'boosts, servers, boosting, platform' %>">
+    <meta property="og:title" content="<%= typeof siteName !== 'undefined' ? siteName : 'Boostium.shop' %>">
+    <meta property="og:description" content="<%= typeof siteDescription !== 'undefined' ? siteDescription : 'Boostium.shop is a platform for boosting servers.' %>">
+    <meta property="og:url" content="<%= typeof siteUrl !== 'undefined' ? siteUrl : 'https://boostium.shop' %>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        void: '#030014',
+                        glass: 'rgba(255, 255, 255, 0.03)',
+                        glassBorder: 'rgba(255, 255, 255, 0.08)',
+                        neon: {
+                            pink: '#F472B6',
+                            blue: '#60A5FA',
+                            purple: '#A78BFA'
+                        }
+                    },
+                    backgroundImage: {
+                        'nebula': 'radial-gradient(circle at 50% -20%, #2e1065, #030014 60%)',
+                        'card-gradient': 'linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%)'
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #030014;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .spotlight-card {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: border-color 0.3s;
+        }
+
+        .spotlight-card::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(
+                800px circle at var(--mouse-x) var(--mouse-y),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: 3;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .spotlight-card:hover::before {
+            opacity: 1;
+        }
+
+        .spotlight-card:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: linear-gradient(180deg, rgba(167, 139, 250, 0.3) 0%, rgba(244, 114, 182, 0.1) 100%);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
+            opacity: 0.6;
+        }
+        
+        .text-gradient {
+            background: linear-gradient(to right, #c084fc, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            transition: all 0.3s;
+        }
+
+        .nav-link:hover {
+            color: #a78bfa;
+        }
+
+        .nav-link.active {
+            color: #a78bfa;
+        }
+
+        @keyframes shimmer {
+            100% { transform: translateX(100%); }
+        }
+
+        .package-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .package-card:hover:not(.disabled) {
+            transform: scale(1.02);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .package-card.disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .package-card.selected {
+            border-color: rgba(99, 102, 241, 0.5);
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .out-of-stock-banner {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 20;
+            pointer-events: none;
+        }
+
+        /* SweetAlert2 Custom Styling - Glass effect like spotlight cards */
+        .swal2-popup {
+            position: relative;
+            background: rgba(255, 255, 255, 0.01) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 1.5rem !important;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(139, 92, 246, 0.2) !important;
+            padding: 2rem !important;
+            overflow: hidden !important;
+            transition: border-color 0.3s !important;
+        }
+
+        .swal2-popup::before {
+            content: "";
+            position: absolute;
+            background: radial-gradient(
+                800px circle at var(--swal2-mouse-x, 50%) var(--swal2-mouse-y, 50%),
+                rgba(255, 255, 255, 0.06),
+                transparent 40%
+            );
+            z-index: -1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+
+        .swal2-popup:hover::before {
+            opacity: 1;
+        }
+
+        .swal2-popup:hover {
+            border-color: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        .swal2-title {
+            color: #ffffff !important;
+            font-weight: 700 !important;
+            font-size: 1.75rem !important;
+            margin-bottom: 1rem !important;
+        }
+
+        .swal2-html-container {
+            color: #e5e7eb !important;
+            font-size: 1rem !important;
+            line-height: 1.6 !important;
+        }
+
+        .swal2-icon {
+            border: none !important;
+            margin: 0 auto 1.5rem !important;
+        }
+
+        .swal2-icon.swal2-success {
+            border-color: #10b981 !important;
+            color: #10b981 !important;
+        }
+
+        .swal2-icon.swal2-error {
+            border-color: #ef4444 !important;
+            color: #ef4444 !important;
+        }
+
+        .swal2-icon.swal2-warning {
+            border-color: #f59e0b !important;
+            color: #f59e0b !important;
+        }
+
+        .swal2-icon.swal2-info {
+            border-color: #3b82f6 !important;
+            color: #3b82f6 !important;
+        }
+
+        .swal2-icon.swal2-question {
+            border-color: #8b5cf6 !important;
+            color: #8b5cf6 !important;
+        }
+
+        .swal2-actions {
+            margin-top: 1.5rem !important;
+            gap: 0.75rem !important;
+        }
+
+        .swal2-confirm,
+        .swal2-cancel {
+            border-radius: 0.75rem !important;
+            padding: 0.75rem 2rem !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            transition: all 0.2s !important;
+            border: none !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        .swal2-confirm {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%) !important;
+            color: #ffffff !important;
+        }
+
+        .swal2-confirm:hover {
+            background: linear-gradient(135deg, #7c3aed 0%, #db2777 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4) !important;
+        }
+
+        .swal2-confirm:active {
+            transform: translateY(0) !important;
+        }
+
+        .swal2-cancel {
+            background: rgba(255, 255, 255, 0.05) !important;
+            color: #e5e7eb !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .swal2-cancel:hover {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            transform: translateY(-2px) !important;
+        }
+
+        .swal2-cancel:active {
+            transform: translateY(0) !important;
+        }
+
+        .swal2-loader {
+            border-color: #8b5cf6 transparent #8b5cf6 transparent !important;
+        }
+
+        .swal2-backdrop-show {
+            background: rgba(0, 0, 0, 0.8) !important;
+            backdrop-filter: blur(4px) !important;
+        }
+
+        /* Review Animation Styles */
+        #review-container {
+            position: relative;
+            min-height: 200px;
+            overflow: hidden;
+        }
+
+        .review-card {
+            animation: reviewFadeIn 0.5s ease-in-out;
+        }
+
+        .review-card.slide-out-left {
+            animation: reviewSlideOutLeft 0.4s ease-in-out forwards;
+        }
+
+        .review-card.slide-out-right {
+            animation: reviewSlideOutRight 0.4s ease-in-out forwards;
+        }
+
+        .review-card.slide-in-left {
+            animation: reviewSlideInLeft 0.5s ease-in-out;
+        }
+
+        .review-card.slide-in-right {
+            animation: reviewSlideInRight 0.5s ease-in-out;
+        }
+
+        .review-card.fade-out {
+            animation: reviewFadeOut 0.3s ease-in-out forwards;
+        }
+
+        .review-card.fade-in {
+            animation: reviewFadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes reviewFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes reviewFadeOut {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        @keyframes reviewSlideOutLeft {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+        }
+
+        @keyframes reviewSlideOutRight {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+        }
+
+        @keyframes reviewSlideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes reviewSlideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Custom HTML content styling */
+        .swal2-html-container strong {
+            color: #a78bfa !important;
+        }
+
+        .swal2-html-container .text-left {
+            text-align: left !important;
+        }
+
+        .swal2-html-container .space-y-2 > * + * {
+            margin-top: 0.5rem !important;
+        }
+        
+        .out-of-stock-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 150px;
+            height: 40px;
+            background: #dc2626;
+            transform: rotate(45deg);
+            transform-origin: top right;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            margin-top: 15px;
+            margin-right: -35px;
+        }
+        
+        .out-of-stock-banner::after {
+            content: 'OUT OF STOCK';
+            position: absolute;
+            top: 22px;
+            right: 8px;
+            color: white;
+            font-weight: bold;
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            transform: rotate(45deg);
+            transform-origin: center;
+            text-transform: uppercase;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            z-index: 21;
+        }
+
+        .user-profile-card {
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .user-profile-card:hover {
+            border-color: rgba(167, 139, 250, 0.5) !important;
+        }
+
+        .user-profile-card:hover #user-profile-btn {
+            box-shadow: 
+                0 0 15px rgba(167, 139, 250, 0.6),
+                0 0 30px rgba(167, 139, 250, 0.4),
+                0 0 45px rgba(244, 114, 182, 0.3),
+                0 0 60px rgba(244, 114, 182, 0.2);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            background: rgba(15, 10, 30, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 16px;
+            width: 280px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(167, 139, 250, 0.15);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .user-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-dropdown-header {
+            padding: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-status-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .status-badge {
+            background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+            color: white;
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .user-info-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .user-name {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .user-id {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .copy-id-btn {
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 12px;
+        }
+
+        .copy-id-btn:hover {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .balance-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(167, 139, 250, 0.1);
+            border: 1px solid rgba(167, 139, 250, 0.2);
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .balance-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .balance-value {
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .user-dropdown-menu {
+            padding: 8px;
+        }
+
+        .user-dropdown-item {
+            padding: 12px 14px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 4px;
+        }
+
+        .user-dropdown-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .user-dropdown-item:hover {
+            background: rgba(167, 139, 250, 0.15);
+            color: #a78bfa;
+        }
+
+        .user-dropdown-item.logout:hover {
+            background: rgba(244, 114, 182, 0.15);
+            color: #f472b6;
+        }
+
+        .user-dropdown-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .advertisement-banner {
+            max-height: 200px;
+            width: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .advertisement-banner:hover {
+            transform: scale(1.02);
+        }
+
+        .advertisement-link {
+            display: block;
+            text-decoration: none;
+        }
+
+        .advertisement-link:hover {
+            text-decoration: none;
+        }
+
+        .leaderboard-rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .leaderboard-rank-badge.rank-1 {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-2 {
+            background: linear-gradient(135deg, #e5e7eb 0%, #9ca3af 100%);
+            color: #1f2937;
+        }
+
+        .leaderboard-rank-badge.rank-3 {
+            background: linear-gradient(135deg, #d97706 0%, #92400e 100%);
+            color: white;
+        }
+
+        .leaderboard-rank-badge.rank-other {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .leaderboard-row {
+            transition: background-color 0.2s;
+        }
+
+        .leaderboard-row:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .rank-badge-prestige {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+
+        .rank-badge-gold {
+            background: rgba(31, 41, 55, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fbbf24;
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-500 selection:text-white min-h-screen">
+
+    <!-- Background Elements -->
+    <div class="fixed top-0 left-0 w-full h-full bg-nebula -z-20"></div>
+    <div class="fixed top-[-10%] left-[20%] ambient-glow animate-blob -z-10"></div>
+    <div class="fixed bottom-[-10%] right-[10%] ambient-glow animate-blob animation-delay-2000 bg-blue-900/20 -z-10" style="width: 800px; height: 800px; filter: blur(120px);"></div>
+
+    <!-- Navigation -->
+    <div class="fixed w-full z-50 top-4 flex justify-center px-4">
+        <nav class="bg-white/5 backdrop-blur-xl border border-white/10 rounded-full px-8 py-4 flex items-center justify-between gap-6 shadow-2xl shadow-indigo-500/10 w-full max-w-6xl">
+            <!-- Left: Logo + Links -->
+            <div class="flex items-center gap-10">
+                <a href="/" class="font-bold text-xl tracking-tight flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-indigo-500"></span>
+                    Boostium
+                </a>
+                <div class="hidden md:flex gap-8 text-sm font-medium text-gray-300">
+                </div>
+            </div>
+
+            <!-- Right: User Profile Summary -->
+            <div class="hidden sm:flex items-center">
+                <div class="user-profile-card relative">
+                    <div id="user-profile-btn" class="flex items-center gap-2 bg-black/40 border border-white/10 rounded-2xl px-3 py-2 shadow-lg shadow-black/40">
+                        <!-- Avatar with initials -->
+                        <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-[10px] font-bold">
+                            <%
+                                let initials = 'US';
+                                if (typeof userStats !== 'undefined' && userStats) {
+                                    if (userStats.name && userStats.name.trim().length > 0) {
+                                        const parts = userStats.name.trim().split(' ');
+                                        initials = (parts[0][0] || '') + (parts[1] ? parts[1][0] : '');
+                                        initials = initials.toUpperCase();
+                                    } else if (userStats.email) {
+                                        initials = userStats.email[0].toUpperCase();
+                                    }
+                                }
+                            %>
+                            <span><%= initials %></span>
+                        </div>
+                        <!-- Name + Balance -->
+                        <div class="flex flex-col leading-tight">
+                            <span class="text-[12px] font-semibold text-gray-100 max-w-[100px] truncate">
+                                <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                            </span>
+                            <a href="/add-balance" class="text-[11px] font-semibold text-purple-300 hover:text-purple-200 transition-colors cursor-pointer">
+                                <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                    $<%= userStats.UserBalance.toFixed(2) %>
+                                <% } else { %>
+                                    $0.00
+                                <% } %>
+                            </a>
+                        </div>
+                        <i class="fas fa-chevron-down text-[9px] text-gray-400 transition-transform duration-200" id="chevron-icon"></i>
+                    </div>
+                    
+                    <!-- Dropdown Menu -->
+                    <div id="user-dropdown" class="user-dropdown">
+                        <!-- Header Section -->
+                        <div class="user-dropdown-header">
+                            <!-- Status + User Info -->
+                            <div class="user-status-row">
+                                <span class="status-badge">
+                                    <%
+                                        let badgeInitials = 'US';
+                                        if (typeof userStats !== 'undefined' && userStats) {
+                                            if (userStats.name && userStats.name.trim().length > 0) {
+                                                const nameParts = userStats.name.trim().split(' ');
+                                                if (nameParts.length > 1) {
+                                                    badgeInitials = (nameParts[0][0] || '') + (nameParts[1][0] || '');
+                                                } else {
+                                                    badgeInitials = nameParts[0].substring(0, 2);
+                                                    if (badgeInitials.length < 2) {
+                                                        badgeInitials = badgeInitials + badgeInitials;
+                                                    }
+                                                }
+                                                badgeInitials = badgeInitials.toUpperCase();
+                                            } else if (userStats.email) {
+                                                badgeInitials = userStats.email.substring(0, 2).toUpperCase();
+                                            }
+                                        }
+                                    %>
+                                    <%= badgeInitials %>
+                                </span>
+                                <div class="user-info-row">
+                                    <span class="user-name">
+                                        <%= (typeof userStats !== 'undefined' && userStats && userStats.name) ? userStats.name : 'Guest' %>
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- User ID -->
+                            <div class="user-info-row" style="margin-bottom: 12px;">
+                                <span class="user-id" id="user-id-text" data-user-id="<%= (typeof userStats !== 'undefined' && userStats && userStats._id) ? userStats._id.toString() : '' %>">
+                                    <% if (typeof userStats !== 'undefined' && userStats && userStats._id) { %>
+                                        <%= userStats._id.toString().substring(0, 10) %>...
+                                    <% } else { %>
+                                        N/A
+                                    <% } %>
+                                </span>
+                                <i class="fas fa-clipboard copy-id-btn" onclick="copyUserId(event)" title="Copy User ID"></i>
+                            </div>
+                            <!-- Balance -->
+                            <div class="balance-row">
+                                <div class="balance-label">
+                                    <i class="fas fa-wallet"></i>
+                                    <span>Balance:</span>
+                                </div>
+                                <a href="/add-balance" class="balance-value hover:text-purple-300 transition-colors cursor-pointer">
+                                    <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.UserBalance === 'number') { %>
+                                        $<%= userStats.UserBalance.toFixed(2) %>
+                                    <% } else { %>
+                                        $0.00
+                                    <% } %>
+                                </a>
+                            </div>
+                        </div>
+                        <!-- Menu Items -->
+                        <div class="user-dropdown-menu">
+                            <div class="user-dropdown-item" onclick="window.location.href='/account-settings'">
+                                <i class="fas fa-cog"></i>
+                                <span>Account Settings</span>
+                            </div>
+                            <div class="user-dropdown-item" onclick="window.location.href='/order-history'">
+                                <i class="fas fa-history"></i>
+                                <span>Order History</span>
+                            </div>
+                            <div class="user-dropdown-item logout" onclick="handleLogout()">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 pt-28 pb-10">
+        <!-- Welcome Section -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">Welcome back!</h1>
+            <p class="text-gray-400">Manage your Discord boosts and server settings</p>
+        </div>
+
+        <!-- Promotional Banners -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Left Banner -->
+            <% if (typeof advertisements !== 'undefined' && advertisements && advertisements.Advertisements && advertisements.Advertisements.ImageURL) { %>
+                <a href="<%= advertisements.Advertisements.Link || '#' %>" target="_blank" class="advertisement-link">
+                    <div class="spotlight-card rounded-2xl overflow-hidden border border-purple-500/20 cursor-pointer hover:border-purple-500/40 transition-all">
+                        <img src="<%= advertisements.Advertisements.ImageURL %>" alt="Advertisement" class="advertisement-banner" />
+                    </div>
+                </a>
+            <% } else { %>
+                <div class="spotlight-card rounded-2xl p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/20 border border-purple-500/20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold mb-1">
+                                CHECK OUT BOOSTIUM.SHOP STORE! 
+                                <span class="text-yellow-400">⭐</span>
+                                <span class="text-orange-400">🔥</span>
+                                <span class="text-yellow-400">🎉</span>
+                            </p>
+                            <p class="text-xs text-gray-300">DISCORD ACCOUNTS, MEMBERS, & MUCH MORE</p>
+                        </div>
+                        <button class="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold flex items-center gap-2 transition-colors">
+                            Buy Now
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            <% } %>
+
+            <!-- Right Banner -->
+            <% if (typeof advertisements !== 'undefined' && advertisements && advertisements.Advertisements2 && advertisements.Advertisements2.ImageURL) { %>
+                <a href="<%= advertisements.Advertisements2.Link || '#' %>" target="_blank" class="advertisement-link">
+                    <div class="spotlight-card rounded-2xl overflow-hidden border border-purple-500/20 cursor-pointer hover:border-purple-500/40 transition-all">
+                        <img src="<%= advertisements.Advertisements2.ImageURL %>" alt="Advertisement" class="advertisement-banner" />
+                    </div>
+                </a>
+            <% } else { %>
+                <div class="spotlight-card rounded-2xl p-6 bg-gradient-to-r from-purple-900/30 to-pink-900/20 border border-purple-500/20">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold mb-1">BECOME RESELLER NOW!</p>
+                            <p class="text-xs text-gray-300">GET 25% OFF EVERYTHING AND ACCESS TO OUR API</p>
+                        </div>
+                        <button class="px-6 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg font-semibold flex items-center gap-2 transition-colors">
+                            Get Started
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            <% } %>
+        </div>
+
+        <!-- Summary Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <!-- Boosts Purchased -->
+            <div class="spotlight-card rounded-2xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-purple-900/50 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-bolt text-purple-300 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-300 mb-2">Boosts Purchased</div>
+                        <div class="text-4xl font-bold mb-3">
+                            <%= generalStats ? generalStats.PurchasedBoosts : 0 %>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Successful Orders -->
+            <div class="spotlight-card rounded-2xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-purple-900/50 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-shield-alt text-purple-300 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-300 mb-2">Successful Orders</div>
+                        <div class="text-4xl font-bold mb-3">
+                            <%= generalStats ? generalStats.SuccessfulOrders : 0 %>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Servers Boosted -->
+            <div class="spotlight-card rounded-2xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-purple-900/50 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <div class="flex flex-col gap-1">
+                            <div class="w-6 h-1.5 bg-purple-300 rounded"></div>
+                            <div class="w-6 h-1.5 bg-purple-300 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-300 mb-2">Servers Boosted</div>
+                        <div class="text-4xl font-bold mb-3">
+                            <%= generalStats ? generalStats.BoostedServers : 0 %>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Total Spent -->
+            <div class="spotlight-card rounded-2xl p-6">
+                <div class="flex items-start gap-4">
+                    <div class="w-14 h-14 rounded-xl bg-purple-900/50 border border-purple-500/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-credit-card text-purple-300 text-xl"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="text-sm font-medium text-gray-300 mb-2">Total Spent</div>
+                        <div class="text-4xl font-bold mb-3">
+                            <% if (typeof userStats !== 'undefined' && userStats && typeof userStats.TotalSpent === 'number') { %>
+                                $<%= userStats.TotalSpent.toFixed(2) %>
+                            <% } else { %>
+                                $0.00
+                            <% } %>
+                        </div>
+                        <div class="flex items-center gap-2 text-sm text-gray-400">
+                           
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column (2/3) -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Purchase Boosts Section -->
+                <div class="spotlight-card rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <h2 class="text-xl font-bold">Purchase Boosts</h2>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex gap-2 mb-6 bg-white/5 rounded-xl p-1">
+                        <button 
+                            id="tab-1month" 
+                            onclick="loadPackages(1)"
+                            class="flex-1 py-2 px-4 rounded-lg bg-indigo-600 text-white text-sm font-semibold transition-all"
+                        >
+                            1 Month
+                        </button>
+                        <button 
+                            id="tab-3months" 
+                            onclick="loadPackages(3)"
+                            class="flex-1 py-2 px-4 rounded-lg text-gray-400 hover:text-white text-sm font-semibold transition-all"
+                        >
+                            3 Months
+                        </button>
+                        
+                    </div>
+
+                    <!-- Boost Packages Container -->
+                    <div id="packages-container" class="grid grid-cols-4 gap-4 mb-6">
+                        <!-- Packages will be loaded here dynamically -->
+                        <div class="col-span-4 text-center text-gray-400 py-8">
+                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                            <p>Loading...</p>
+                        </div>
+                    </div>
+
+                    <!-- Discord Invite Link -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Discord Invite Link</label>
+                        <div class="flex items-center gap-2">
+                            <div class="flex-1 relative">
+                                <input 
+                                    id="discord-invite-link"
+                                    type="text" 
+                                    placeholder="Enter your Discord invite link (e.g., discord.gg/invite)" 
+                                    class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+                                    onblur="validateDiscordInvite()"
+                                    oninput="clearDiscordValidation(); updatePurchaseButton();"
+                                    required
+                                />
+                                <!-- Validation Icon -->
+                                <div id="discord-validation-icon" class="absolute right-3 top-1/2 -translate-y-1/2 hidden">
+                                    <i id="discord-validation-icon-i" class="text-lg"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Validation Message -->
+                        <div id="discord-validation-message" class="mt-2 text-xs hidden"></div>
+                    </div>
+
+                    <!-- Discord Server Info Card (shown when validated) -->
+                    <div id="discord-server-card" class="hidden mb-4 spotlight-card rounded-2xl p-5">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-4 flex-1 min-w-0">
+                                <!-- Server Icon -->
+                                <div id="discord-server-icon" class="w-16 h-16 rounded-xl bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center flex-shrink-0 overflow-hidden border-2 border-purple-500/30 shadow-lg">
+                                    <span id="discord-server-icon-text" class="text-white font-bold text-xl">B</span>
+                                    <img id="discord-server-icon-img" src="" alt="" class="hidden w-full h-full object-cover">
+                                </div>
+                                
+                                <div class="flex-1 min-w-0">
+                                    <!-- Server Name -->
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span id="discord-server-name" class="text-white font-bold text-lg truncate">[Boostium]</span>
+                                        <div class="w-6 h-6 rounded-md bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center flex-shrink-0 shadow-md">
+                                            <i class="fas fa-crown text-yellow-900 text-xs"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Discord Invite Link -->
+                                    <div id="discord-server-invite" class="text-gray-400 text-sm truncate flex items-center gap-2">
+                                        <i class="fab fa-discord text-[#5865F2]"></i>
+                                        <span>https://discord.gg/...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Member Count and Verified Badge -->
+                            <div class="flex items-center gap-3 flex-shrink-0">
+                                <div class="text-right">
+                                    <span id="discord-server-members" class="text-gray-300 text-sm font-medium whitespace-nowrap block">0 members</span>
+                                    <span id="discord-server-online" class="text-gray-500 text-xs whitespace-nowrap block">0 online</span>
+                                </div>
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg border-2 border-green-400/30">
+                                    <i class="fas fa-check text-white text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Buy Members Button -->
+                        <button class="w-full py-3.5 bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-500 hover:via-purple-600 hover:to-pink-500 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-purple-500/50 transform hover:scale-[1.02] active:scale-[0.98]">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Buy Members Here</span>
+                        </button>
+                    </div>
+
+                    <!-- Promocode -->
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Promocode</label>
+                        <div class="flex gap-2">
+                            <input 
+                                type="text" 
+                                placeholder="Enter promocode" 
+                                class="flex-1 px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/50"
+                            />
+                            <button class="px-6 py-3 bg-purple-600 hover:bg-purple-500 rounded-xl font-semibold transition-colors">Apply</button>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Enter a promocode to get a discount or credit</p>
+                    </div>
+
+                    <!-- No Available Boosts Message (shown only when no stock) -->
+                    <div id="no-boosts-message" class="hidden bg-red-500/20 border border-red-500/30 rounded-xl p-4 mb-4">
+                        <p class="text-red-300 text-sm">
+                            No Available Boosts. Sorry, there are currently no boosts available for purchase. Please check back later.
+                        </p>
+                    </div>
+
+                    <!-- Purchase Button -->
+                    <button 
+                        id="purchase-boost-btn"
+                        onclick="purchaseBoost()" 
+                        disabled
+                        class="hidden w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2 mb-4"
+                    >
+                        <i class="fas fa-shopping-cart"></i>
+                        Purchase Selected Boost
+                    </button>
+
+                    <!-- Bulk Order -->
+                    <div class="bg-green-500/20 border border-green-500/30 rounded-xl p-4 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-shopping-cart text-green-400"></i>
+                            <div>
+                                <p class="font-semibold text-green-300">Bulk Order Boost Keys</p>
+                                <p class="text-xs text-gray-400">Order multiple boost keys with bulk discounts</p>
+                            </div>
+                        </div>
+                        <button onclick="showBulkOrderSoon()" class="px-6 py-2 bg-green-600 hover:bg-green-500 rounded-lg font-semibold transition-colors">
+                            Bulk Order
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Customer Reviews Section -->
+                <div class="spotlight-card rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <i class="fas fa-star text-yellow-400"></i>
+                        <h2 class="text-xl font-bold">Customer Reviews</h2>
+                    </div>
+
+                    <div class="relative">
+                        <!-- Review Card Container -->
+                        <div id="review-container">
+                            <div class="spotlight-card rounded-xl p-6 bg-white/5 border border-white/10">
+                                <div class="text-center text-gray-400 py-8">
+                                    <i class="fas fa-spinner fa-spin text-3xl mb-2 opacity-50"></i>
+                                    <p>Loading reviews...</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Navigation Arrows -->
+                        <button id="review-prev" onclick="changeReview(-1)" class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors hidden">
+                            <i class="fas fa-chevron-left text-xs"></i>
+                        </button>
+                        <button id="review-next" onclick="changeReview(1)" class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center hover:bg-white/20 transition-colors hidden">
+                            <i class="fas fa-chevron-right text-xs"></i>
+                        </button>
+
+                        <!-- Pagination Dots -->
+                        <div class="flex justify-center gap-2 mt-4" id="review-dots"></div>
+                    </div>
+
+                    <button class="mt-6 w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all">
+                        <i class="fas fa-star"></i>
+                        Leave us a review
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column (1/3) -->
+            <div class="space-y-6">
+                <!-- Credits Leaderboard -->
+                <div class="spotlight-card rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-trophy text-yellow-400"></i>
+                            <h2 class="text-xl font-bold">Credits Leaderboard</h2>
+                        </div>
+                        
+                    </div>
+
+                    <!-- Table Headers -->
+                    <div class="grid grid-cols-[40px_1fr_120px_120px] gap-4 mb-3 px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                        <div>#</div>
+                        <div>User</div>
+                      
+                        <div class="text-right">Total Credits</div>
+                    </div>
+
+                    <!-- Leaderboard Rows -->
+                    <div class="space-y-2 max-h-[600px] overflow-y-auto">
+                        <% if (typeof leaderboard !== 'undefined' && leaderboard && leaderboard.length > 0) { %>
+                            <% leaderboard.forEach((user, index) => { %>
+                                <% 
+                                    const rank = index + 1;
+                                    let rankBadgeClass = 'rank-other';
+                                    if (rank === 1) rankBadgeClass = 'rank-1';
+                                    else if (rank === 2) rankBadgeClass = 'rank-2';
+                                    else if (rank === 3) rankBadgeClass = 'rank-3';
+
+                                    let avatarInitials = 'U';
+                                    if (user.name && user.name.trim().length > 0) {
+                                        const nameParts = user.name.trim().split(' ');
+                                        avatarInitials = (nameParts[0][0] || '').toUpperCase();
+                                    } else if (user.email) {
+                                        avatarInitials = user.email[0].toUpperCase();
+                                    }
+
+                                    let rankBadgeText = 'Prestige';
+                                    let rankBadgeIcon = 'fa-crown';
+                                    let rankBadgeClassCSS = 'rank-badge-prestige';
+                                    
+                                    if (rank === 4 || rank === 10) {
+                                        rankBadgeText = 'Gold';
+                                        rankBadgeIcon = 'fa-medal';
+                                        rankBadgeClassCSS = 'rank-badge-gold';
+                                    } else if (user.Rank && user.Rank !== 'No Rank' && user.Rank.toLowerCase().includes('gold')) {
+                                        rankBadgeText = 'Gold';
+                                        rankBadgeIcon = 'fa-medal';
+                                        rankBadgeClassCSS = 'rank-badge-gold';
+                                    }
+                                %>
+                                <div class="leaderboard-row grid grid-cols-[40px_1fr_120px_120px] gap-4 items-center py-3 px-2 rounded-lg">
+                                    <!-- Rank Number -->
+                                    <div class="flex justify-left">
+                                        <div class="leaderboard-rank-badge <%= rankBadgeClass %>">
+                                            <%= rank %>
+                                        </div>
+                                    </div>
+                                    <!-- User Info -->
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                            <%= avatarInitials %>
+                                        </div>
+                                        <span class="text-sm font-semibold text-gray-100 truncate">
+                                            <%= user.name || user.email || 'Unknown' %>
+                                        </span>
+                                    </div>
+                                    <!-- Rank Badge -->
+                                    
+                                    <!-- Total Credits -->
+                                    <div class="text-right">
+                                        <span class="text-sm font-bold text-white">
+                                            $<%= (user.TotalSpent || 0).toFixed(2) %>
+                                        </span>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        <% } else { %>
+                            <div class="text-center py-8 text-gray-400">
+                                <p>No users on leaderboard yet</p>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Your Rank -->
+                <div class="spotlight-card rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-trophy text-purple-400"></i>
+                        <h2 class="text-xl font-bold">Your Rank</h2>
+                    </div>
+                    <%
+                        let rankName = (typeof userStats !== 'undefined' && userStats && userStats.Rank) ? userStats.Rank : 'Bronze';
+                        let rankXP = (typeof userStats !== 'undefined' && userStats && userStats.RankXP) ? userStats.RankXP : 0;
+                        let rankNextXP = (typeof userStats !== 'undefined' && userStats && userStats.RankNextXP) ? userStats.RankNextXP : 500;
+                        let neededXP = Math.max(0, rankNextXP - rankXP);
+                        let progressPercent = 0;
+                        let rankIcon = 'fa-medal';
+                        let rankColor = 'from-amber-600 to-orange-600';
+                        let rankDiscount = 0;
+                        
+                        const rankConfig = {
+                            'Bronze': { icon: 'fa-medal', color: 'from-amber-600 to-orange-600', discount: 0, nextXP: 500 },
+                            'Silver': { icon: 'fa-medal', color: 'from-gray-400 to-gray-500', discount: 2, nextXP: 1500 },
+                            'Gold': { icon: 'fa-medal', color: 'from-yellow-400 to-yellow-600', discount: 5, nextXP: 5000 },
+                            'Platinum': { icon: 'fa-crown', color: 'from-cyan-400 to-blue-500', discount: 10, nextXP: 15000 },
+                            'Diamond': { icon: 'fa-gem', color: 'from-blue-400 to-purple-500', discount: 15, nextXP: 50000 },
+                            'Master': { icon: 'fa-crown', color: 'from-purple-500 to-pink-500', discount: 20, nextXP: 100000 },
+                            'Legend': { icon: 'fa-crown', color: 'from-red-500 to-orange-500', discount: 25, nextXP: Infinity }
+                        };
+                        
+                        let config = rankConfig[rankName] || rankConfig['Bronze'];
+                        rankIcon = config.icon;
+                        rankColor = config.color;
+                        rankDiscount = config.discount;
+                        
+                        if (rankNextXP && rankNextXP !== Infinity) {
+                            const currentLevelMin = rankName === 'Bronze' ? 0 : 
+                                                    rankName === 'Silver' ? 500 :
+                                                    rankName === 'Gold' ? 1500 :
+                                                    rankName === 'Platinum' ? 5000 :
+                                                    rankName === 'Diamond' ? 15000 :
+                                                    rankName === 'Master' ? 50000 : 100000;
+                            const range = rankNextXP - currentLevelMin;
+                            const progress = rankXP - currentLevelMin;
+                            progressPercent = Math.min(100, Math.max(0, (progress / range) * 100));
+                        } else {
+                            progressPercent = 100;
+                        }
+                    %>
+                    <div class="text-center mb-6">
+                        <!-- Rank Icon and Name -->
+                        <div class="flex items-center justify-center mb-4">
+                            <div class="w-20 h-20 rounded-full bg-gradient-to-br <%= rankColor %> flex items-center justify-center shadow-lg shadow-purple-500/30">
+                                <i class="fas <%= rankIcon %> text-white text-3xl"></i>
+                            </div>
+                        </div>
+                        <div class="text-3xl font-bold mb-2 bg-gradient-to-r <%= rankColor %> bg-clip-text text-transparent">
+                            <%= rankName %>
+                        </div>
+                        <div class="text-lg font-semibold text-gray-300 mb-1">
+                            <%= rankXP.toLocaleString() %> XP
+                        </div>
+                        
+                        <!-- Progress Bar -->
+                        <% if (rankNextXP && rankNextXP !== Infinity) { %>
+                            <div class="mt-4 mb-2">
+                                <div class="flex justify-between text-xs text-gray-400 mb-1">
+                                    <span>Level Progress</span>
+                                    <span><%= progressPercent.toFixed(1) %>%</span>
+                                </div>
+                                <div class="w-full h-3 bg-zinc-800 rounded-full overflow-hidden border border-zinc-700">
+                                    <div class="h-full bg-gradient-to-r <%= rankColor %> transition-all duration-500 ease-out" style="width: <%= progressPercent %>%"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                    <span><%= rankXP.toLocaleString() %> XP</span>
+                                    <span><%= rankNextXP.toLocaleString() %> XP</span>
+                                </div>
+                            </div>
+                            <div class="text-sm text-gray-400 mt-2">
+                                <%= neededXP.toLocaleString() %> XP to next rank
+                            </div>
+                        <% } else { %>
+                            <div class="text-sm text-purple-400 font-semibold mt-2">
+                                Maximum Rank Achieved! 🎉
+                            </div>
+                        <% } %>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="text-sm font-semibold mb-3 text-gray-300">Rank Benefits:</div>
+                        <div class="flex justify-between items-center text-sm p-3 rounded-lg bg-white/5 border border-white/10">
+                            <span class="text-gray-400 flex items-center gap-2">
+                                <i class="fas fa-percent text-purple-400"></i>
+                                Boost Discount
+                            </span>
+                            <span class="font-bold text-lg text-green-400"><%= rankDiscount %>%</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm p-3 rounded-lg bg-white/5 border border-white/10">
+                            <span class="text-gray-400 flex items-center gap-2">
+                                <i class="fas fa-coins text-yellow-400"></i>
+                                XP Rate
+                            </span>
+                            <span class="font-semibold text-gray-300">$1 = 100 XP</span>
+                        </div>
+                    </div>
+                    <div class="spotlight-card rounded-xl p-4 bg-white/5 border border-white/10 mb-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                                <i class="fab fa-discord text-indigo-400"></i>
+                            </div>
+                            <p class="text-sm font-medium">Sync your rank with Discord to get exclusive role benefits</p>
+                        </div>
+                    </div>
+                    <button class="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl font-semibold transition-all transform hover:scale-[1.02] shadow-lg shadow-purple-500/20">
+                        Get Discord Role
+                    </button>
+                </div>
+
+                <!-- Weekly Giveaways -->
+                <div class="spotlight-card rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fas fa-gift text-pink-400"></i>
+                        <h2 class="text-xl font-bold">Weekly Giveaways</h2>
+                    </div>
+                    <p class="text-sm text-gray-400 mb-4">Join our exclusive giveaways and win Discord Nitro, boosts, and more!</p>
+                    <button class="w-full px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 rounded-xl font-semibold transition-all">
+                        Enter Giveaway
+                    </button>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="spotlight-card rounded-2xl p-6">
+                    <div class="flex items-center gap-2 mb-6">
+                        <i class="fas fa-bolt text-yellow-400"></i>
+                        <h2 class="text-xl font-bold">Recent Activity</h2>
+                    </div>
+                    
+                    <div class="space-y-3 mb-6">
+                        <div class="spotlight-card rounded-xl p-4 bg-white/5 border border-white/10 flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center">
+                                <i class="fas fa-bolt text-indigo-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-sm">Order History</div>
+                                <div class="text-xs text-gray-400">View your past orders</div>
+                            </div>
+                        </div>
+                        <div class="spotlight-card rounded-xl p-4 bg-white/5 border border-white/10 flex items-center gap-3 cursor-pointer hover:bg-white/10 transition-colors">
+                            <div class="w-10 h-10 rounded-lg bg-green-500/20 border border-green-500/30 flex items-center justify-center">
+                                <i class="fas fa-wallet text-green-400"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold text-sm">Top Up Balance</div>
+                                <div class="text-xs text-gray-400">Add funds to your account</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center py-8">
+                        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                            <i class="fas fa-chart-line text-gray-500 text-2xl"></i>
+                        </div>
+                        <p class="text-gray-400 mb-1">No recent activity</p>
+                        <p class="text-xs text-gray-500">Transactions will appear here</p>
+                    </div>
+
+                    <button class="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl font-semibold transition-all">
+                        View All Activity
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 bg-black/40 mt-16">
+        <div class="max-w-7xl mx-auto px-6 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                <p class="text-sm text-gray-400">©2025 Boosts.to. All rights reserved.</p>
+                <div class="flex gap-6 text-sm">
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
+                    <a href="#" class="text-gray-400 hover:text-white transition-colors">Contact</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Spotlight Effect Script -->
+    <script>
+        const cards = document.querySelectorAll('.spotlight-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+
+        const API_URL = '<%= apiUrl || "/api" %>';
+        let currentDuration = 1;
+
+        async function loadPackages(duration) {
+            currentDuration = duration;
+            selectedPackageId = null; // Reset selection
+            
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-gray-400');
+            });
+            
+            if (duration === 1) {
+                document.getElementById('tab-1month').classList.add('bg-indigo-600', 'text-white');
+                document.getElementById('tab-1month').classList.remove('text-gray-400');
+            } else if (duration === 3) {
+                document.getElementById('tab-3months').classList.add('bg-indigo-600', 'text-white');
+                document.getElementById('tab-3months').classList.remove('text-gray-400');
+            }
+
+            const container = document.getElementById('packages-container');
+            container.innerHTML = '<div class="col-span-4 text-center text-gray-400 py-8"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><p>Loading...</p></div>';
+
+            try {
+                const response = await fetch(`${API_URL}/boosts/packages/${duration}`);
+                const data = await response.json();
+
+                if (data.success && data.packages) {
+                    renderPackages(data.packages);
+                } else {
+                    container.innerHTML = '<div class="col-span-4 text-center text-gray-400 py-8"><p>No packages found</p></div>';
+                }
+            } catch (error) {
+                console.error('Package loading error:', error);
+                container.innerHTML = '<div class="col-span-4 text-center text-red-400 py-8"><p>Loading error. Please try again.</p></div>';
+            }
+        }
+
+        function renderPackages(packages) {
+            const container = document.getElementById('packages-container');
+            const noBoostsMessage = document.getElementById('no-boosts-message');
+
+            if (packages.length === 0) {
+                if (noBoostsMessage) {
+                    noBoostsMessage.classList.remove('hidden');
+                }
+                container.innerHTML = '<div class="col-span-4 text-center text-gray-400 py-8"><p>No boosts available for this duration.</p></div>';
+                return;
+            } else {
+                if (noBoostsMessage) {
+                    noBoostsMessage.classList.add('hidden');
+                }
+            }
+
+            container.innerHTML = packages.map((pkg, index) => `
+                <div 
+                    class="spotlight-card rounded-xl p-4 relative overflow-hidden package-card ${!pkg.inStock ? 'disabled opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${selectedPackageId === pkg._id ? 'ring-2 ring-purple-500' : ''}"
+                    data-package-id="${pkg._id}"
+                    onclick="${pkg.inStock ? `selectPackage('${pkg._id}', ${index})` : ''}"
+                >
+                    ${!pkg.inStock ? `
+                        <div class="absolute top-2 left-0 right-0 transform -rotate-12 origin-center z-20">
+                            <div class="bg-red-500/90 backdrop-blur-sm px-3 py-1 mx-auto w-fit rounded shadow-lg">
+                                <span class="text-white text-xs font-bold">OUT OF STOCK</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    <div class="text-center relative z-10">
+                        <div class="text-lg font-bold mb-1">${pkg.quantity} Boosts</div>
+                        <div class="text-xl font-bold text-purple-400">$${pkg.price.toFixed(2)}</div>
+                        <div class="text-xs text-gray-400">$${pkg.pricePerBoost.toFixed(2)} per boost</div>
+                    </div>
+                </div>
+            `).join('');
+
+            const newCards = container.querySelectorAll('.spotlight-card');
+            newCards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+        }
+
+        let selectedPackageId = null;
+        let selectedPackageData = null;
+        
+        function selectPackage(packageId, index) {
+            document.querySelectorAll('.package-card').forEach(card => {
+                card.classList.remove('ring-2', 'ring-purple-500');
+            });
+            
+            const selectedCard = document.querySelector(`[data-package-id="${packageId}"]`);
+            if (selectedCard && !selectedCard.classList.contains('disabled')) {
+                selectedCard.classList.add('ring-2', 'ring-purple-500');
+                selectedPackageId = packageId;
+                
+                fetch(`${API_URL}/boosts/packages/${currentDuration}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success && data.packages) {
+                            selectedPackageData = data.packages.find(p => p._id === packageId);
+                            updatePurchaseButton();
+                        }
+                    })
+                    .catch(err => console.error('Package information could not be retrieved:', err));
+            }
+        }
+        
+        function updatePurchaseButton() {
+            const purchaseBtn = document.getElementById('purchase-boost-btn');
+            const discordInput = document.getElementById('discord-invite-link');
+            const discordValidationIcon = document.getElementById('discord-validation-icon');
+            
+            if (purchaseBtn) {
+                const hasValidDiscord = discordInput && discordInput.value.trim() && 
+                                       discordValidationIcon && !discordValidationIcon.classList.contains('hidden') &&
+                                       document.getElementById('discord-validation-icon-i')?.classList.contains('fa-check-circle');
+                
+                if (selectedPackageId && hasValidDiscord) {
+                    purchaseBtn.classList.remove('hidden');
+                    purchaseBtn.disabled = false;
+                } else {
+                    purchaseBtn.classList.add('hidden');
+                    purchaseBtn.disabled = true;
+                }
+            }
+        }
+        
+        async function purchaseBoost() {
+            if (!selectedPackageId || !selectedPackageData) {
+                Swal.fire({
+                    title: 'No Package Selected',
+                    html: `
+                        <div class="text-left space-y-3 mt-4">
+                            <p class="text-center text-yellow-400">Please select a boost package first.</p>
+                        </div>
+                    `,
+                    icon: 'warning',
+                    iconColor: '#f59e0b',
+                    confirmButtonText: '<i class="fas fa-check mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+                return;
+            }
+            
+            const discordInvite = document.getElementById('discord-invite-link')?.value?.trim();
+            if (!discordInvite) {
+                Swal.fire({
+                    title: 'Discord Invite Required',
+                    html: `
+                        <div class="text-left space-y-3 mt-4">
+                            <p class="text-center text-red-400">Please enter a valid Discord invite link.</p>
+                        </div>
+                    `,
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+                return;
+            }
+            
+            const discordValidationIcon = document.getElementById('discord-validation-icon-i');
+            if (!discordValidationIcon || !discordValidationIcon.classList.contains('fa-check-circle')) {
+                Swal.fire({
+                    title: 'Invalid Discord Invite',
+                    html: `
+                        <div class="text-left space-y-3 mt-4">
+                            <p class="text-center text-red-400">Please enter a valid Discord invite link and wait for validation.</p>
+                        </div>
+                    `,
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+                return;
+            }
+            
+            const result = await Swal.fire({
+                title: 'Confirm Purchase',
+                html: `
+                    <div class="text-left space-y-3 mt-4">
+                        <div class="spotlight-card rounded-xl p-4 border border-white/10 bg-white/5">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-400 text-sm">Package</span>
+                                <span class="text-white font-semibold">${selectedPackageData.quantity} Boosts</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-400 text-sm">Duration</span>
+                                <span class="text-white font-semibold">${selectedPackageData.duration} month${selectedPackageData.duration > 1 ? 's' : ''}</span>
+                            </div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-gray-400 text-sm">Price</span>
+                                <span class="text-purple-400 font-bold text-lg">$${selectedPackageData.price.toFixed(2)}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-gray-400 text-sm">Discord Server</span>
+                                <span class="text-white font-medium text-sm truncate max-w-[200px]" title="${discordInvite}">${discordInvite}</span>
+                            </div>
+                        </div>
+                    </div>
+                `,
+                icon: 'question',
+                iconColor: '#8b5cf6',
+                showCancelButton: true,
+                confirmButtonText: '<i class="fas fa-shopping-cart mr-2"></i> Purchase',
+                cancelButtonText: '<i class="fas fa-times mr-2"></i> Cancel',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'swal2-popup-custom',
+                    title: 'swal2-title-custom',
+                    htmlContainer: 'swal2-html-container-custom',
+                    confirmButton: 'swal2-confirm-custom',
+                    cancelButton: 'swal2-cancel-custom'
+                },
+                didOpen: () => {
+                    const popup = document.querySelector('.swal2-popup');
+                    if (popup) {
+                        popup.addEventListener('mousemove', (e) => {
+                            const rect = popup.getBoundingClientRect();
+                            const x = e.clientX - rect.left;
+                            const y = e.clientY - rect.top;
+                            popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                            popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                        });
+                    }
+                }
+            });
+            
+            if (!result.isConfirmed) {
+                return;
+            }
+            
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Please wait while we process your purchase.',
+                    icon: 'info',
+                    iconColor: '#8b5cf6',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom'
+                    },
+                    didOpen: () => {
+                        Swal.showLoading();
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+                
+                const response = await fetch(`${API_URL}/boosts/purchase`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        packageId: selectedPackageId,
+                        discordInvite: discordInvite
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Purchase Successful!',
+                        html: `
+                            <div class="text-left space-y-3 mt-4">
+                                <div class="flex items-center justify-center mb-4">
+                                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center shadow-lg">
+                                        <i class="fas fa-check text-white text-2xl"></i>
+                                    </div>
+                                </div>
+                                <div class="spotlight-card rounded-xl p-4 border border-white/10 bg-white/5 space-y-2">
+                                    <p class="text-center text-green-400 font-semibold mb-3">✅ Your boost package has been purchased successfully!</p>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-400 text-sm">Package</span>
+                                        <span class="text-white font-semibold">${data.data.package.name}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-400 text-sm">Price</span>
+                                        <span class="text-purple-400 font-semibold">$${selectedPackageData.price.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-gray-400 text-sm">Previous Balance</span>
+                                        <span class="text-gray-300 font-semibold">$${data.data.previousBalance.toFixed(2)}</span>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-2 border-t border-white/10">
+                                        <span class="text-gray-400 text-sm font-semibold">New Balance</span>
+                                        <span class="text-green-400 font-bold text-lg">$${data.data.newBalance.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `,
+                        icon: 'success',
+                        iconColor: '#10b981',
+                        confirmButtonText: '<i class="fas fa-check mr-2"></i> OK',
+                        customClass: {
+                            popup: 'swal2-popup-custom',
+                            title: 'swal2-title-custom',
+                            htmlContainer: 'swal2-html-container-custom',
+                            confirmButton: 'swal2-confirm-custom'
+                        },
+                        didOpen: () => {
+                            const popup = document.querySelector('.swal2-popup');
+                            if (popup) {
+                                popup.addEventListener('mousemove', (e) => {
+                                    const rect = popup.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                    popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                                });
+                            }
+                        }
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Purchase Failed',
+                        html: `
+                            <div class="text-left space-y-3 mt-4">
+                                <div class="flex items-center justify-center mb-4">
+                                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
+                                        <i class="fas fa-times text-white text-2xl"></i>
+                                    </div>
+                                </div>
+                                <p class="text-center text-red-400">${data.message || 'An error occurred during purchase.'}</p>
+                            </div>
+                        `,
+                        icon: 'error',
+                        iconColor: '#ef4444',
+                        confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                        customClass: {
+                            popup: 'swal2-popup-custom',
+                            title: 'swal2-title-custom',
+                            htmlContainer: 'swal2-html-container-custom',
+                            confirmButton: 'swal2-confirm-custom'
+                        },
+                        didOpen: () => {
+                            const popup = document.querySelector('.swal2-popup');
+                            if (popup) {
+                                popup.addEventListener('mousemove', (e) => {
+                                    const rect = popup.getBoundingClientRect();
+                                    const x = e.clientX - rect.left;
+                                    const y = e.clientY - rect.top;
+                                    popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                    popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                                });
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Purchase error:', error);
+                Swal.fire({
+                    title: 'Error',
+                    html: `
+                        <div class="text-left space-y-3 mt-4">
+                            <div class="flex items-center justify-center mb-4">
+                                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center shadow-lg">
+                                    <i class="fas fa-exclamation-triangle text-white text-2xl"></i>
+                                </div>
+                            </div>
+                            <p class="text-center text-red-400">An error occurred. Please try again.</p>
+                        </div>
+                    `,
+                    icon: 'error',
+                    iconColor: '#ef4444',
+                    confirmButtonText: '<i class="fas fa-times mr-2"></i> OK',
+                    customClass: {
+                        popup: 'swal2-popup-custom',
+                        title: 'swal2-title-custom',
+                        htmlContainer: 'swal2-html-container-custom',
+                        confirmButton: 'swal2-confirm-custom'
+                    },
+                    didOpen: () => {
+                        const popup = document.querySelector('.swal2-popup');
+                        if (popup) {
+                            popup.addEventListener('mousemove', (e) => {
+                                const rect = popup.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                popup.style.setProperty('--swal2-mouse-x', `${x}px`);
+                                popup.style.setProperty('--swal2-mouse-y', `${y}px`);
+                            });
+                        }
+                    }
+                });
+            }
+        }
+
+        let discordValidationTimeout = null;
+
+        function clearDiscordValidation() {
+            const icon = document.getElementById('discord-validation-icon');
+            const message = document.getElementById('discord-validation-message');
+            const input = document.getElementById('discord-invite-link');
+            const serverCard = document.getElementById('discord-server-card');
+            
+            if (icon) icon.classList.add('hidden');
+            if (message) {
+                message.classList.add('hidden');
+                message.className = 'mt-2 text-xs hidden';
+            }
+            if (input) {
+                input.classList.remove('border-green-500', 'border-red-500');
+                input.classList.add('border-white/10');
+            }
+            
+            if (serverCard) {
+                serverCard.classList.add('hidden');
+            }
+
+            if (discordValidationTimeout) {
+                clearTimeout(discordValidationTimeout);
+            }
+        }
+
+        async function validateDiscordInvite() {
+            const input = document.getElementById('discord-invite-link');
+            const icon = document.getElementById('discord-validation-icon');
+            const iconI = document.getElementById('discord-validation-icon-i');
+            const message = document.getElementById('discord-validation-message');
+            
+            if (!input || !input.value.trim()) {
+                clearDiscordValidation();
+                return;
+            }
+
+            const inviteUrl = input.value.trim();
+
+            if (discordValidationTimeout) {
+                clearTimeout(discordValidationTimeout);
+            }
+
+            if (icon) {
+                icon.classList.remove('hidden');
+                iconI.className = 'fas fa-spinner fa-spin text-gray-400';
+            }
+            if (input) {
+                input.classList.remove('border-green-500', 'border-red-500');
+                input.classList.add('border-yellow-500/50');
+            }
+
+            discordValidationTimeout = setTimeout(async () => {
+                try {
+                    const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                    
+                    const response = await fetch(`${API_URL}/auth/discord/validate-invite`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            inviteUrl: inviteUrl
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (data.valid) {
+                        if (icon) {
+                            icon.classList.remove('hidden');
+                            iconI.className = 'fas fa-check-circle text-green-400';
+                        }
+                        if (input) {
+                            input.classList.remove('border-yellow-500/50', 'border-red-500');
+                            input.classList.add('border-green-500');
+                        }
+                        if (message) {
+                            message.textContent = data.message || 'Discord invite URL is valid';
+                            message.className = 'mt-2 text-xs text-green-400';
+                            message.classList.remove('hidden');
+                        }
+                        
+                        const serverCard = document.getElementById('discord-server-card');
+                        if (serverCard && data.data) {
+                            const serverData = data.data;
+                            const guild = serverData.guild;
+                            const channel = serverData.channel;
+                            
+                            const serverNameEl = document.getElementById('discord-server-name');
+                            if (serverNameEl && guild) {
+                                serverNameEl.textContent = guild.name || '[Server]';
+                            }
+                            
+                            const serverIconEl = document.getElementById('discord-server-icon-img');
+                            const serverIconTextEl = document.getElementById('discord-server-icon-text');
+                            if (guild && guild.icon) {
+                                const iconUrl = `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png`;
+                                if (serverIconEl) {
+                                    serverIconEl.src = iconUrl;
+                                    serverIconEl.alt = guild.name || 'Server Icon';
+                                    serverIconEl.classList.remove('hidden');
+                                }
+                                if (serverIconTextEl) {
+                                    serverIconTextEl.classList.add('hidden');
+                                }
+                            } else {
+                                if (serverIconTextEl && guild && guild.name) {
+                                    serverIconTextEl.textContent = guild.name.charAt(0).toUpperCase();
+                                    serverIconTextEl.classList.remove('hidden');
+                                }
+                                if (serverIconEl) {
+                                    serverIconEl.classList.add('hidden');
+                                }
+                            }
+                            
+                            const inviteLinkEl = document.getElementById('discord-server-invite');
+                            if (inviteLinkEl) {
+                                inviteLinkEl.textContent = inviteUrl;
+                            }
+                            
+                            const membersEl = document.getElementById('discord-server-members');
+                            const onlineEl = document.getElementById('discord-server-online');
+                            if (membersEl && serverData.approximate_member_count) {
+                                const memberCount = serverData.approximate_member_count.toLocaleString();
+                                membersEl.textContent = `${memberCount} members`;
+                            } else if (membersEl) {
+                                membersEl.textContent = '0 members';
+                            }
+                            
+                            if (onlineEl && serverData.approximate_presence_count) {
+                                const onlineCount = serverData.approximate_presence_count.toLocaleString();
+                                onlineEl.textContent = `${onlineCount} online`;
+                            } else if (onlineEl) {
+                                onlineEl.textContent = '0 online';
+                            }
+                            
+                            serverCard.classList.remove('hidden');
+                            
+                            serverCard.addEventListener('mousemove', (e) => {
+                                const rect = serverCard.getBoundingClientRect();
+                                const x = e.clientX - rect.left;
+                                const y = e.clientY - rect.top;
+                                serverCard.style.setProperty('--mouse-x', `${x}px`);
+                                serverCard.style.setProperty('--mouse-y', `${y}px`);
+                            });
+                        }
+                        
+                        updatePurchaseButton();
+                    } else {
+                        if (icon) {
+                            icon.classList.remove('hidden');
+                            iconI.className = 'fas fa-times-circle text-red-400';
+                        }
+                        if (input) {
+                            input.classList.remove('border-yellow-500/50', 'border-green-500');
+                            input.classList.add('border-red-500');
+                        }
+                        if (message) {
+                            message.textContent = data.message || 'Discord invite URL is invalid';
+                            message.className = 'mt-2 text-xs text-red-400';
+                            message.classList.remove('hidden');
+                        }
+                        updatePurchaseButton();
+                    }
+                } catch (error) {
+                    console.error('Discord validation error:', error);
+                    if (icon) icon.classList.add('hidden');
+                    if (input) {
+                        input.classList.remove('border-yellow-500/50', 'border-green-500', 'border-red-500');
+                        input.classList.add('border-white/10');
+                    }
+                    if (message) {
+                        message.textContent = 'An error occurred during validation';
+                        message.className = 'mt-2 text-xs text-yellow-400';
+                        message.classList.remove('hidden');
+                    }
+                }
+            }, 500);
+        }
+
+        function showBulkOrderSoon() {
+            Swal.fire({
+                title: 'Coming Soon',
+                text: 'Bulk Order feature is under development. Stay tuned 🚀',
+                icon: 'info',
+                background: '#030014',
+                color: '#e5e7eb',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#4f46e5',
+                customClass: {
+                    popup: 'border border-white/10 rounded-2xl shadow-2xl',
+                    title: 'text-xl font-bold',
+                    confirmButton: 'px-6 py-2 rounded-lg font-semibold'
+                }
+            });
+        }
+
+        const userProfileBtn = document.getElementById('user-profile-btn');
+        const userDropdown = document.getElementById('user-dropdown');
+        const chevronIcon = document.getElementById('chevron-icon');
+
+        if (userProfileBtn && userDropdown) {
+            userProfileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+                chevronIcon.style.transform = userDropdown.classList.contains('show') ? 'rotate(180deg)' : 'rotate(0deg)';
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userProfileBtn.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.classList.remove('show');
+                    chevronIcon.style.transform = 'rotate(0deg)';
+                }
+            });
+        }
+
+        function copyUserId(event) {
+            const userIdElement = document.getElementById('user-id-text');
+            const userId = userIdElement ? userIdElement.getAttribute('data-user-id') : null;
+            
+            if (!userId) {
+                console.error('User ID not found');
+                return;
+            }
+            
+            navigator.clipboard.writeText(userId).then(() => {
+                const btn = event.target;
+                const originalIcon = btn.className;
+                btn.className = 'fas fa-check copy-id-btn';
+                btn.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    btn.className = originalIcon;
+                    btn.style.color = '';
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+            });
+        }
+
+        async function handleLogout() {
+            try {
+                const response = await fetch(`${API_URL}/auth/logout`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+
+                window.location.href = '/login';
+            } catch (error) {
+                console.error('Logout error:', error);
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                document.cookie = 'token=; Max-Age=0; Path=/; SameSite=Lax';
+                window.location.href = '/login';
+            }
+        }
+
+        let currentReviewIndex = 0;
+        let isAnimating = false;
+        const reviews = <%- JSON.stringify((typeof comments !== 'undefined' && comments && Array.isArray(comments)) ? comments : []) %>;
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const formattedDate = date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+            const formattedTime = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            return { date: formattedDate, time: formattedTime };
+        }
+
+        function getUserInitials(userName, userEmail) {
+            if (userName && userName.trim().length > 0) {
+                const nameParts = userName.trim().split(' ');
+                let initials = (nameParts[0][0] || '').toUpperCase();
+                if (nameParts.length > 1 && nameParts[1][0]) {
+                    initials += nameParts[1][0].toUpperCase();
+                }
+                return initials;
+            } else if (userEmail) {
+                return userEmail[0].toUpperCase();
+            }
+            return 'U';
+        }
+
+        function renderReview(index, animationDirection = null) {
+            console.log('renderReview called:', index, animationDirection, 'reviews.length:', reviews ? reviews.length : 0);
+            
+            if (!reviews || reviews.length === 0) {
+                console.log('No reviews available');
+                return;
+            }
+            
+            const review = reviews[index];
+            if (!review) {
+                console.log('Review not found at index:', index);
+                return;
+            }
+
+            const { date, time } = formatDate(review.CreatedAt);
+            const initials = getUserInitials(review.userName, review.userEmail);
+            
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<i class="fas fa-star ${i <= review.Stars ? 'text-purple-400' : 'text-gray-600'} text-sm"></i>`;
+            }
+
+            const reviewContainer = document.getElementById('review-container');
+            if (!reviewContainer) {
+                console.error('review-container element not found');
+                return;
+            }
+            
+            if (animationDirection !== null && reviewContainer.children.length > 0) {
+                const currentCard = reviewContainer.querySelector('.review-card');
+                if (currentCard) {
+                    isAnimating = true;
+                    if (animationDirection === 'left') {
+                        currentCard.classList.add('slide-out-left');
+                    } else if (animationDirection === 'right') {
+                        currentCard.classList.add('slide-out-right');
+                    } else {
+                        currentCard.classList.add('fade-out');
+                    }
+                    
+                    setTimeout(() => {
+                        renderNewReview(index, animationDirection);
+                    }, 400);
+                    return;
+                }
+            }
+            
+            renderNewReview(index, animationDirection);
+        }
+
+        function renderNewReview(index, animationDirection = null) {
+            if (reviews.length === 0) return;
+            
+            const review = reviews[index];
+            if (!review) return;
+            
+            const { date, time } = formatDate(review.CreatedAt);
+            const initials = getUserInitials(review.userName, review.userEmail);
+            
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<i class="fas fa-star ${i <= review.Stars ? 'text-purple-400' : 'text-gray-600'} text-sm"></i>`;
+            }
+
+            const reviewContainer = document.getElementById('review-container');
+            
+            let entryAnimationClass = '';
+            if (animationDirection === 'left') {
+                entryAnimationClass = 'slide-in-left';
+            } else if (animationDirection === 'right') {
+                entryAnimationClass = 'slide-in-right';
+            } else if (animationDirection === null) {
+                entryAnimationClass = '';
+            } else {
+                entryAnimationClass = 'fade-in';
+            }
+            
+            reviewContainer.innerHTML = `
+                <div class="spotlight-card rounded-xl p-6 bg-white/5 border border-white/10 review-card ${entryAnimationClass}" data-index="${index}">
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold flex-shrink-0">
+                            ${initials}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="font-semibold">@${review.userName || 'User'}</span>
+                                <span class="px-2 py-1 bg-purple-500/20 border border-purple-500/30 rounded text-xs font-semibold text-purple-300">Verified</span>
+                            </div>
+                            <div class="flex gap-1 mb-2">
+                                ${starsHtml}
+                            </div>
+                            <p class="text-gray-300 mb-2">"${review.Comment}"</p>
+                            <p class="text-xs text-gray-500">${date}, ${time}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            const dotsContainer = document.getElementById('review-dots');
+            dotsContainer.innerHTML = '';
+            
+            if (reviews.length > 1) {
+                reviews.forEach((_, i) => {
+                    const dot = document.createElement('div');
+                    dot.className = `review-dot w-2 h-2 rounded-full ${i === index ? 'bg-purple-500' : 'bg-white/20'} cursor-pointer transition-all duration-300`;
+                    dot.onclick = () => goToReview(i);
+                    dotsContainer.appendChild(dot);
+                });
+            }
+
+            const prevBtn = document.getElementById('review-prev');
+            const nextBtn = document.getElementById('review-next');
+            
+            if (reviews.length > 1) {
+                if (prevBtn) prevBtn.classList.remove('hidden');
+                if (nextBtn) nextBtn.classList.remove('hidden');
+            } else {
+                if (prevBtn) prevBtn.classList.add('hidden');
+                if (nextBtn) nextBtn.classList.add('hidden');
+            }
+            
+            setTimeout(() => {
+                isAnimating = false;
+            }, 500);
+        }
+
+        function changeReview(direction) {
+            if (reviews.length === 0 || isAnimating) return;
+            
+            const previousIndex = currentReviewIndex;
+            currentReviewIndex += direction;
+            
+            if (currentReviewIndex < 0) {
+                currentReviewIndex = reviews.length - 1;
+            } else if (currentReviewIndex >= reviews.length) {
+                currentReviewIndex = 0;
+            }
+            
+            const animationDirection = direction > 0 ? 'left' : 'right';
+            renderReview(currentReviewIndex, animationDirection);
+        }
+
+        function goToReview(index) {
+            if (reviews.length === 0 || isAnimating) return;
+            
+            let animationDirection = null;
+            if (index !== currentReviewIndex) {
+                const forward = (index > currentReviewIndex) || (index === 0 && currentReviewIndex === reviews.length - 1);
+                const backward = (index < currentReviewIndex) || (index === reviews.length - 1 && currentReviewIndex === 0);
+                
+                if (forward) {
+                    animationDirection = 'left';
+                } else if (backward) {
+                    animationDirection = 'right';
+                }
+            }
+            
+            currentReviewIndex = index;
+            renderReview(currentReviewIndex, animationDirection);
+        }
+
+        function checkRankUp() {
+            const rankOrder = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'Legend'];
+            
+            const currentRank = '<%= rankName %>';
+            const previousRank = localStorage.getItem('userRank');
+            
+            if (previousRank && previousRank !== currentRank) {
+                const previousIndex = rankOrder.indexOf(previousRank);
+                const currentIndex = rankOrder.indexOf(currentRank);
+                
+                if (currentIndex > previousIndex) {
+                    celebrateRankUp(currentRank, previousRank);
+                }
+            }
+            
+            localStorage.setItem('userRank', currentRank);
+        }
+        
+        function celebrateRankUp(newRank, oldRank) {
+            const duration = 3000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+            
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+            
+            const interval = setInterval(function() {
+                const timeLeft = animationEnd - Date.now();
+                
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+                
+                const particleCount = 50 * (timeLeft / duration);
+                
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+                });
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+                });
+                confetti({
+                    ...defaults,
+                    particleCount,
+                    origin: { x: randomInRange(0.4, 0.6), y: Math.random() - 0.2 }
+                });
+            }, 250);
+            
+            setTimeout(() => {
+                Swal.fire({
+                    title: '🎉 Rank Up! 🎉',
+                    html: `
+                        <div class="text-center space-y-4">
+                            <div class="text-6xl mb-4">🏆</div>
+                            <div class="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                ${oldRank} → ${newRank}
+                            </div>
+                            <p class="text-gray-300 mt-4">Congratulations! You've reached a new rank!</p>
+                            <p class="text-sm text-gray-400">You now have access to better discounts and benefits!</p>
+                        </div>
+                    `,
+                    width: '500px',
+                    padding: '2rem',
+                    background: 'rgba(26, 26, 46, 0.95)',
+                    backdrop: `
+                        rgba(0, 0, 0, 0.4)
+                        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+                        left top
+                    `,
+                    color: '#fff',
+                    showConfirmButton: true,
+                    confirmButtonText: 'Awesome!',
+                    confirmButtonColor: '#8b5cf6',
+                    buttonsStyling: true,
+                    customClass: {
+                        popup: 'spotlight-card border border-white/20',
+                        title: 'text-white',
+                        confirmButton: 'px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 transition-all'
+                    },
+                    allowOutsideClick: true,
+                    allowEscapeKey: true
+                });
+            }, 500);
+        }
+
+        async function checkBannedStatus() {
+            try {
+                const token = localStorage.getItem('token') || document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                if (!token) return;
+                
+                const response = await fetch(`${API_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.user && data.user.banned === true) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Account Banned',
+                            html: `
+                                <div class="text-left">
+                                    <p class="mb-3">Your account has been banned.</p>
+                                    <p class="text-sm text-gray-400"><strong>Reason:</strong> ${data.user.banReason || 'No reason provided'}</p>
+                                </div>
+                            `,
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#d33',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false
+                        }).then(() => {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('user');
+                            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                            window.location.href = '/login?banned=true&reason=' + encodeURIComponent(data.user.banReason || 'No reason provided');
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking banned status:', error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkBannedStatus();
+            
+            setInterval(checkBannedStatus, 30000);
+            
+            loadPackages(1);
+            
+            checkRankUp();
+            
+            console.log('DOMContentLoaded - Reviews:', reviews);
+            if (reviews && reviews.length > 0) {
+                renderReview(0, null);
+            } else {
+                const reviewContainer = document.getElementById('review-container');
+                if (reviewContainer) {
+                    reviewContainer.innerHTML = `
+                        <div class="spotlight-card rounded-xl p-6 bg-white/5 border border-white/10">
+                            <div class="text-center text-gray-400 py-8">
+                                <i class="fas fa-comments text-3xl mb-2 opacity-50"></i>
+                                <p>No reviews yet</p>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
